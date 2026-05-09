@@ -1,6 +1,16 @@
 {
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
+  },
   "dependencies": {
-    "@prisma/client": "^7.8.0",
+    "@prisma/client": "^6.4.0",
+    "@supabase/supabase-js": "^2.105.4",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -14,6 +24,6 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
-    "prisma": "^7.8.0"
+    "prisma": "^6.4.0"
   }
 }

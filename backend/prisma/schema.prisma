@@ -13,10 +13,17 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  fullname  String
-  email     String   @unique
-  password  String
-  role      Role
-  createdAt DateTime @default(now())
+  id                String   @id // matches Supabase auth.users UUID
+  firstName         String
+  lastName          String
+  email             String   @unique
+  role              Role
+  matricNumber      String?  @unique // Required for STUDENT
+  staffId           String?  @unique // Required for LECTURER
+  isVerified        Boolean  @default(true) // Set to true for now per user request
+  isProfileComplete Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("users")
 }

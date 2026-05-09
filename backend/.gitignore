@@ -1,2 +1,5 @@
 node_modules
 .env
+project_structure.text
+project_structure_after.text
+data_flow_and_procedures.txt
