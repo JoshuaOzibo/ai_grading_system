@@ -10,20 +10,120 @@ datasource db {
 enum Role {
   STUDENT
   LECTURER
+  ADMIN
 }
 
 model User {
-  id                String   @id // matches Supabase auth.users UUID
+  id                String       @id // matches Supabase auth.users UUID
   firstName         String
   lastName          String
-  email             String   @unique
+  email             String       @unique
   role              Role
-  matricNumber      String?  @unique // Required for STUDENT
-  staffId           String?  @unique // Required for LECTURER
-  isVerified        Boolean  @default(true) // Set to true for now per user request
-  isProfileComplete Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  matricNumber      String?      @unique // Required for STUDENT
+  staffId           String?      @unique // Required for LECTURER
+  isVerified        Boolean      @default(true) // Set to true for now per user request
+  isProfileComplete Boolean      @default(false)
+  exams             Exam[]
+  submissions       Submission[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
   @@map("users")
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Exam {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  duration    Int          // In minutes
+  startDate   DateTime
+  endDate     DateTime
+  status      ExamStatus   @default(DRAFT)
+  lecturerId  String
+  lecturer    User         @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  submissions Submission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("exams")
+}
+
+enum QuestionType {
+  MCQ
+  ESSAY
+}
+
+model Question {
+  id             String       @id @default(uuid())
+  examId         String
+  exam           Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  type           QuestionType
+  text           String
+  points         Int          @default(1)
+  
+  // MCQ fields
+  options        String[]     // Array of option texts
+  correctOption  String?      // correct option key, e.g. "A", "B" etc
+  
+  // Essay fields
+  expectedAnswer String?      // Ideal answer
+  aiMarkingGuide String?      // Guide/rubrics
+  
+  answers        Answer[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("questions")
+}
+
+enum SubmissionStatus {
+  STARTED
+  SUBMITTED
+  GRADED
+}
+
+model Submission {
+  id          String           @id @default(uuid())
+  examId      String
+  exam        Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers     Answer[]
+  score       Float?           // overall calculated score
+  status      SubmissionStatus @default(STARTED)
+  startedAt   DateTime         @default(now())
+  submittedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("submissions")
+}
+
+model Answer {
+  id             String     @id @default(uuid())
+  submissionId   String
+  submission     Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // Student answer text/choice
+  selectedOption String?    // e.g. "A"
+  typedAnswer    String?    // written essay answer
+  
+  // Grading feedback
+  score          Float?     // calculated score
+  feedback       String?    // AI/Lecturer comment
+  isCorrect      Boolean?   // for MCQ
+  gradedAt       DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@map("answers")
 }

@@ -57,63 +57,6 @@ export function AdminDashboard() {
         <StatCard label="System Load" value="42%" delta="Normal" icon={Activity} accent="green" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2 shadow-card">
-          <CardHeader>
-            <CardTitle>System Activity (Weekly)</CardTitle>
-          </CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={activityData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="day" stroke="var(--muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                  }}
-                />
-                <Bar dataKey="users" fill="var(--chart-1)" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
-              Resource Usage
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">CPU Usage</span>
-                <span className="font-semibold">42%</span>
-              </div>
-              <Progress value={42} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Memory Usage</span>
-                <span className="font-semibold">68%</span>
-              </div>
-              <Progress value={68} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Storage</span>
-                <span className="font-semibold">35%</span>
-              </div>
-              <Progress value={35} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Card className="shadow-card">
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>Recent System Alerts</CardTitle>
