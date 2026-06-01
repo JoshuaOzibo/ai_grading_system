@@ -74,7 +74,6 @@ function Settings() {
               ["Email notifications", "Receive grading and result updates", true],
               ["AI suggestions", "Show AI grading suggestions", true],
               ["Weekly summary", "Get weekly performance reports", false],
-              ["Two-factor authentication", "Extra security for your account", true],
             ].map(([t, d, def]) => (
               <div key={t as string} className="flex items-start justify-between gap-4 rounded-xl border p-4">
                 <div>

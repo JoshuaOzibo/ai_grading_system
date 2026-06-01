@@ -21,7 +21,6 @@ import { Route as AppResultsRouteImport } from './routes/_app/results'
 import { Route as AppQuestionsRouteImport } from './routes/_app/questions'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
-import { Route as AppAnalyticsRouteImport } from './routes/_app/analytics'
 import { Route as AppAiGradingRouteImport } from './routes/_app/ai-grading'
 import { Route as AppExamsIndexRouteImport } from './routes/_app/exams.index'
 import { Route as AppExamsCreateRouteImport } from './routes/_app/exams.create'
@@ -85,11 +84,6 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppAiGradingRoute = AppAiGradingRouteImport.update({
   id: '/ai-grading',
   path: '/ai-grading',
@@ -112,7 +106,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/ai-grading': typeof AppAiGradingRoute
-  '/analytics': typeof AppAnalyticsRoute
   '/dashboard': typeof AppDashboardRoute
   '/notifications': typeof AppNotificationsRoute
   '/questions': typeof AppQuestionsRoute
@@ -129,7 +122,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/ai-grading': typeof AppAiGradingRoute
-  '/analytics': typeof AppAnalyticsRoute
   '/dashboard': typeof AppDashboardRoute
   '/notifications': typeof AppNotificationsRoute
   '/questions': typeof AppQuestionsRoute
@@ -148,7 +140,6 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_app/ai-grading': typeof AppAiGradingRoute
-  '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/questions': typeof AppQuestionsRoute
@@ -167,7 +158,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/ai-grading'
-    | '/analytics'
     | '/dashboard'
     | '/notifications'
     | '/questions'
@@ -184,7 +174,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/ai-grading'
-    | '/analytics'
     | '/dashboard'
     | '/notifications'
     | '/questions'
@@ -202,7 +191,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/_app/ai-grading'
-    | '/_app/analytics'
     | '/_app/dashboard'
     | '/_app/notifications'
     | '/_app/questions'
@@ -308,13 +296,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/analytics': {
-      id: '/_app/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AppAnalyticsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/ai-grading': {
       id: '/_app/ai-grading'
       path: '/ai-grading'
@@ -341,7 +322,6 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAiGradingRoute: typeof AppAiGradingRoute
-  AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppQuestionsRoute: typeof AppQuestionsRoute
@@ -355,7 +335,6 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAiGradingRoute: AppAiGradingRoute,
-  AppAnalyticsRoute: AppAnalyticsRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppQuestionsRoute: AppQuestionsRoute,

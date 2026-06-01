@@ -6,7 +6,6 @@ import {
   GraduationCap,
   Upload,
   Brain,
-  BarChart3,
   Bell,
   Settings,
   Sparkles,
@@ -38,7 +37,6 @@ const navByRole: Record<Role, { label: string; items: Item[] }[]> = {
       label: "Overview",
       items: [
         { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-        { title: "Analytics", url: "/analytics", icon: BarChart3 },
       ],
     },
     {
@@ -65,10 +63,6 @@ const navByRole: Record<Role, { label: string; items: Item[] }[]> = {
         { title: "Results", url: "/results", icon: Trophy },
       ],
     },
-    {
-      label: "Insights",
-      items: [{ title: "Analytics", url: "/analytics", icon: BarChart3 }],
-    },
   ],
   student: [
     {
@@ -78,7 +72,6 @@ const navByRole: Record<Role, { label: string; items: Item[] }[]> = {
         { title: "My Exams", url: "/exams", icon: GraduationCap },
         { title: "Upload Answers", url: "/upload", icon: Upload },
         { title: "My Results", url: "/results", icon: Trophy },
-        { title: "Performance", url: "/analytics", icon: BarChart3 },
       ],
     },
   ],
