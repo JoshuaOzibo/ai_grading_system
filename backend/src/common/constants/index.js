@@ -15,4 +15,5 @@ export const HTTP_STATUS = {
 export const ROLES = {
   STUDENT: 'STUDENT',
   LECTURER: 'LECTURER',
+  ADMIN: 'ADMIN',
 };
