@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import examController from './exam.controller.js';
+import submissionController from '../submissions/submission.controller.js';
 import { verifyToken, restrictTo } from '../../common/middleware/protect.js';
 import { ROLES } from '../../common/constants/index.js';
 
@@ -22,5 +23,16 @@ router.patch('/:id/publish', verifyToken, restrictTo(ROLES.LECTURER), examContro
 
 // Delete an exam (Lecturer creator or Admin)
 router.delete('/:id', verifyToken, restrictTo(ROLES.LECTURER, ROLES.ADMIN), examController.deleteExam);
+
+// --- Student Exam Session Endpoints ---
+
+// Start or resume an exam (Students only)
+router.post('/:examId/start', verifyToken, restrictTo(ROLES.STUDENT), submissionController.startExam);
+
+// Submit answers and complete exam (Students only)
+router.post('/:examId/submit', verifyToken, restrictTo(ROLES.STUDENT), submissionController.submitExam);
+
+// Get list of submissions for a specific exam (Lecturers only)
+router.get('/:examId/submissions', verifyToken, restrictTo(ROLES.LECTURER), submissionController.getSubmissionsByExam);
 
 export default router;
