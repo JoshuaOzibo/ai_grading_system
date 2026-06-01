@@ -50,60 +50,6 @@ export function StudentDashboard() {
         <StatCard label="Courses" value="6" icon={BookOpen} accent="purple" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2 shadow-card">
-          <CardHeader>
-            <CardTitle>Performance History</CardTitle>
-          </CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={history}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="exam" stroke="var(--muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={12} domain={[60, 100]} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="score"
-                  stroke="var(--chart-1)"
-                  strokeWidth={3}
-                  dot={{ fill: "var(--chart-1)", r: 5 }}
-                  activeDot={{ r: 7 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle>Course Progress</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[
-              { name: "Computer Science", v: 78 },
-              { name: "Mathematics", v: 65 },
-              { name: "Physics", v: 84 },
-              { name: "Literature", v: 42 },
-            ].map((c) => (
-              <div key={c.name}>
-                <div className="flex justify-between text-sm">
-                  <span>{c.name}</span>
-                  <span className="font-semibold">{c.v}%</span>
-                </div>
-                <Progress value={c.v} className="mt-2 h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle>Upcoming Exams</CardTitle>

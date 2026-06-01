@@ -16,20 +16,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// Mount all API routes under /api
 app.use('/api', router);
 
-// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ status: 'error', message: `Route ${req.originalUrl} not found` });
 });
-
-// Global error handler
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({

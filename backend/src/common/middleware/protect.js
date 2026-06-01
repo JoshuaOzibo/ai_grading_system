@@ -1,10 +1,6 @@
 import supabase from '../../utils/supabase.js';
 import prisma from '../../utils/prisma.js';
 
-/**
- * verifyToken — Validates the Supabase JWT from the Authorization header.
- * Attaches the full DB user to req.user for use in downstream controllers.
- */
 export const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -18,7 +14,6 @@ export const verifyToken = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
 
-    // Verify token via Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
@@ -28,7 +23,6 @@ export const verifyToken = async (req, res, next) => {
       });
     }
 
-    // Fetch the full user record from our Prisma DB
     const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
 
     if (!dbUser) {
@@ -48,10 +42,7 @@ export const verifyToken = async (req, res, next) => {
   }
 };
 
-/**
- * restrictTo — Role-based access control guard.
- * Usage: restrictTo('LECTURER') or restrictTo('STUDENT', 'LECTURER')
- */
+
 export const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
