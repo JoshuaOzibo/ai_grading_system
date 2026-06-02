@@ -1,4 +1,4 @@
-import userService from './user.service.js';
+import userService from '../../services/user.service.js';
 import { sendSuccess, sendError } from '../../common/helpers/response.js';
 import { HTTP_STATUS } from '../../common/constants/index.js';
 

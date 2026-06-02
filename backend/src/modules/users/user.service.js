@@ -1,4 +1,4 @@
-import userRepository from './user.repository.js';
+import userRepository from '../modules/users/user.repository.js';
 
 class UserService {
   async getProfile(userId) {
@@ -19,7 +19,7 @@ class UserService {
     // Mark profile as complete if they have first and last names
     const firstName = allowedUpdates.firstName || user.firstName;
     const lastName = allowedUpdates.lastName || user.lastName;
-    
+
     if (firstName && lastName) {
       allowedUpdates.isProfileComplete = true;
     }
@@ -34,7 +34,7 @@ class UserService {
   async verifyLecturer(userId, isVerified) {
     const user = await userRepository.findById(userId);
     if (!user) throw new Error('User not found');
-    
+
     if (user.role !== 'LECTURER') {
       throw new Error('Only LECTURER profiles can be verified/unverified');
     }
