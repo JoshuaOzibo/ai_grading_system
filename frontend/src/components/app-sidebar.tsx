@@ -28,6 +28,15 @@ import {
 } from "@/components/ui/sidebar";
 import { useRole, type Role } from "@/lib/role-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut } from "lucide-react";
 
 type Item = { title: string; url: string; icon: React.ComponentType<{ className?: string }> };
 
@@ -80,7 +89,7 @@ const navByRole: Record<Role, { label: string; items: Item[] }[]> = {
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { role } = useRole();
+  const { role, user, logout } = useRole();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const groups = navByRole[role];
 
@@ -153,19 +162,49 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t">
-        <div className="flex items-center gap-2 px-2 py-2">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
-              {role.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-sm font-medium capitalize">{role}</span>
-              <span className="text-xs text-muted-foreground">demo@gradeai.app</span>
-            </div>
-          )}
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex w-full items-center gap-2 px-2 py-2 hover:bg-muted/50 rounded-lg transition text-left cursor-pointer">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                  {user
+                    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+                    : role.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {!collapsed && (
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-sm font-medium truncate">
+                    {user ? `${user.firstName} ${user.lastName}` : `${role} view`}
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {user?.email || "demo@gradeai.app"}
+                  </span>
+                </div>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>
+              {user ? "My Account" : "Demo Account"}
+            </DropdownMenuLabel>
+            {user && (
+              <>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  Role: <span className="font-semibold capitalize text-foreground">{role}</span>
+                  {user.matricNumber && ` (${user.matricNumber})`}
+                  {user.staffId && ` (${user.staffId})`}
+                </div>
+              </>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );

@@ -1,7 +1,7 @@
 import { Outlet } from "@tanstack/react-router";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Bell, Search, Sparkles } from "lucide-react";
+import { Bell, Search, Sparkles, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRole, type Role } from "@/lib/role-context";
@@ -18,8 +18,21 @@ import { useState } from "react";
 import { AIAssistantPanel } from "@/components/ai-assistant-panel";
 
 export function DashboardLayout() {
-  const { role, setRole } = useRole();
+  const { role, setRole, loading } = useRole();
   const [aiOpen, setAiOpen] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground animate-pulse font-medium">
+            Loading your GradeAI workspace...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
