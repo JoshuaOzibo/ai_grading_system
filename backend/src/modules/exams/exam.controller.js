@@ -97,6 +97,22 @@ class ExamController {
       });
     }
   }
+
+  async generateExamWithAI(req, res) {
+    try {
+      const exam = await examService.generateExamWithAI(req.user.id, req.body);
+      return sendSuccess(res, {
+        statusCode: HTTP_STATUS.CREATED,
+        message: 'Exam and questions generated successfully with AI',
+        data: exam,
+      });
+    } catch (error) {
+      return sendError(res, {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: error.message,
+      });
+    }
+  }
 }
 
 export default new ExamController();

@@ -9,6 +9,9 @@ const router = Router();
 // Retrieve all exams (authenticated users - students see published, lecturers see theirs, admins see all)
 router.get('/', verifyToken, examController.getExams);
 
+// Generate a new exam and questions with AI (Lecturers only)
+router.post('/generate', verifyToken, restrictTo(ROLES.LECTURER), examController.generateExamWithAI);
+
 // Retrieve details of a specific exam
 router.get('/:id', verifyToken, examController.getExamById);
 

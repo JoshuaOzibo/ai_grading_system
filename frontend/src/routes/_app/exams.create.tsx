@@ -30,6 +30,41 @@ function CreateExam() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  // AI Gen states
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [topic, setTopic] = useState("");
+  const [aiNumQuestions, setAiNumQuestions] = useState("5");
+  const [aiQuestionType, setAiQuestionType] = useState<"MCQ" | "ESSAY">("ESSAY");
+
+  const aiGenerateMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.post<{ data: { id: string } }>("/exams/generate", {
+        topic,
+        numQuestions: parseInt(aiNumQuestions, 10),
+        questionType: aiQuestionType,
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setCreatedExamId(data.id);
+      setAiDialogOpen(false);
+      setOpen(true);
+      toast.success("Exam and questions generated successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to generate exam using AI");
+    },
+  });
+
+  const handleAiGenerateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!topic.trim()) {
+      toast.error("Please enter a topic.");
+      return;
+    }
+    aiGenerateMutation.mutate();
+  };
+
   const createExamMutation = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -207,13 +242,104 @@ function CreateExam() {
               <p className="mt-2 text-sm text-muted-foreground">
                 Let AI draft questions based on a topic or syllabus.
               </p>
-              <Button type="button" className="mt-4 w-full rounded-full bg-gradient-primary cursor-pointer">
+              <Button
+                type="button"
+                className="mt-4 w-full rounded-full bg-gradient-primary cursor-pointer"
+                onClick={() => setAiDialogOpen(true)}
+              >
                 Try AI generation
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* AI Generation Dialog */}
+      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-background border border-border">
+          <form onSubmit={handleAiGenerateSubmit}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                AI Exam Generator
+              </DialogTitle>
+              <DialogDescription>
+                Describe the topic or subject, and our AI will instantly generate an exam draft populated with graded questions.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="topic">Topic / Subject</Label>
+                <Input
+                  id="topic"
+                  placeholder="e.g. Introduction to React, Data Structures, etc."
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="aiNumQuestions">Number of Questions</Label>
+                  <Select value={aiNumQuestions} onValueChange={setAiNumQuestions}>
+                    <SelectTrigger id="aiNumQuestions" className="rounded-full">
+                      <SelectValue placeholder="Select count" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 Questions</SelectItem>
+                      <SelectItem value="5">5 Questions</SelectItem>
+                      <SelectItem value="10">10 Questions</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="aiQuestionType">Question Type</Label>
+                  <Select
+                    value={aiQuestionType}
+                    onValueChange={(val) => setAiQuestionType(val as "MCQ" | "ESSAY")}
+                  >
+                    <SelectTrigger id="aiQuestionType" className="rounded-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MCQ">Multiple Choice (MCQ)</SelectItem>
+                      <SelectItem value="ESSAY">Essay / Theory</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full cursor-pointer"
+                onClick={() => setAiDialogOpen(false)}
+                disabled={aiGenerateMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="rounded-full bg-gradient-primary cursor-pointer gap-2"
+                disabled={aiGenerateMutation.isPending}
+              >
+                {aiGenerateMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Generate Exam
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

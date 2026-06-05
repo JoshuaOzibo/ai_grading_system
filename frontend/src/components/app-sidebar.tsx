@@ -119,7 +119,10 @@ export function AppSidebar() {
               <SidebarMenu>
                 {g.items.map((item) => {
                   const active =
-                    path === item.url || (item.url !== "/dashboard" && path.startsWith(item.url));
+                    path === item.url ||
+                    (item.url !== "/dashboard" &&
+                      path.startsWith(item.url) &&
+                      !(item.url === "/exams" && path.startsWith("/exams/create")));
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild isActive={active}>

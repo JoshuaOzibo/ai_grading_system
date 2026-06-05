@@ -133,3 +133,107 @@ Respond strictly with a JSON object in this format (no other text, no markdown f
     throw new Error(`Failed to grade essay with AI: ${error.message}`);
   }
 };
+
+/**
+ * generateExamQuestions — Calls the Gemini API to generate exam title, description, and questions list.
+ * @param {string} topic - The topic of the exam
+ * @param {number} numQuestions - Number of questions to generate
+ * @param {string} questionType - MCQ or ESSAY
+ * @returns {Promise<{ title: string, description: string, questions: Array }>}
+ */
+export const generateExamQuestions = async (topic, numQuestions, questionType) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+    console.warn('GEMINI_API_KEY is not set. Returning mock generated exam.');
+    const questions = [];
+    for (let i = 1; i <= numQuestions; i++) {
+      if (questionType === 'MCQ') {
+        questions.push({
+          type: 'MCQ',
+          text: `Mock MCQ Question ${i} on ${topic}: Which of the following is correct?`,
+          points: 2,
+          options: ['Option A', 'Option B', 'Option C', 'Option D'],
+          correctOption: 'A',
+          expectedAnswer: null,
+          aiMarkingGuide: null
+        });
+      } else {
+        questions.push({
+          type: 'ESSAY',
+          text: `Mock Essay Question ${i} on ${topic}: Explain the significance and key applications.`,
+          points: 5,
+          options: [],
+          correctOption: null,
+          expectedAnswer: 'This is the expected ideal answer summarizing key points of the essay topic.',
+          aiMarkingGuide: 'Criteria:\n- 50% core definition\n- 50% structural detail'
+        });
+      }
+    }
+    return {
+      title: `${topic} Assessment`,
+      description: `Auto-generated exam covering ${topic}. Please answer all questions carefully.`,
+      questions
+    };
+  }
+
+  try {
+    const prompt = `Create an academic exam on the topic "${topic}" containing ${numQuestions} questions of type "${questionType}" (MCQ or ESSAY).
+Provide:
+1. A concise, professional Exam Title.
+2. A brief Exam Description/instructions.
+3. A list of questions.
+- If type is MCQ: questions must have "type" ("MCQ"), "text", "points" (integer, e.g. 2), "options" (array of exactly 4 choices), "correctOption" (must be "A", "B", "C", or "D"), and null "expectedAnswer" and "aiMarkingGuide".
+- If type is ESSAY: questions must have "type" ("ESSAY"), "text", "points" (integer, e.g. 5), empty "options" array, null "correctOption", and complete "expectedAnswer" and "aiMarkingGuide".
+
+Respond strictly with a JSON object in this format (no other text, no markdown formatting wrappers like \`\`\`json):
+{
+  "title": "Exam Title",
+  "description": "Exam Description/Instructions",
+  "questions": [
+    {
+      "type": "MCQ",
+      "text": "Question text?",
+      "points": 2,
+      "options": ["Choice A", "Choice B", "Choice C", "Choice D"],
+      "correctOption": "B",
+      "expectedAnswer": null,
+      "aiMarkingGuide": null
+    }
+  ]
+}`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Gemini API error: ${response.status} - ${errText}`);
+    }
+
+    const data = await response.json();
+    const textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!textResponse) {
+      throw new Error('Empty response received from Gemini API');
+    }
+
+    return JSON.parse(textResponse.trim());
+  } catch (error) {
+    console.error('Error generating exam questions with Gemini:', error);
+    throw new Error(`Failed to generate exam with AI: ${error.message}`);
+  }
+};

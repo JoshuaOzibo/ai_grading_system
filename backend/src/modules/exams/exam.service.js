@@ -1,4 +1,5 @@
 import examRepository from './exam.repository.js';
+import { generateExamQuestions } from '../../services/ai.service.js';
 
 class ExamService {
   async createExam(lecturerId, examData) {
@@ -102,6 +103,50 @@ class ExamService {
     }
 
     return await examRepository.delete(examId);
+  }
+
+  async generateExamWithAI(lecturerId, { topic, numQuestions, questionType }) {
+    if (!topic) throw new Error('Topic is required');
+    const count = parseInt(numQuestions, 10) || 5;
+    const type = questionType === 'MCQ' ? 'MCQ' : 'ESSAY';
+
+    // Call AI service to generate exam and questions
+    const generatedData = await generateExamQuestions(topic, count, type);
+
+    const startDate = new Date();
+    const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+
+    // Create the exam
+    const exam = await examRepository.create({
+      title: generatedData.title || `${topic} Assessment`,
+      description: generatedData.description || `Auto-generated exam covering ${topic}`,
+      duration: type === 'MCQ' ? 30 : 60,
+      startDate,
+      endDate,
+      status: 'DRAFT',
+      lecturerId,
+    });
+
+    // Create all generated questions in the database
+    const { default: prisma } = await import('../../utils/prisma.js');
+    if (generatedData.questions && generatedData.questions.length > 0) {
+      for (const q of generatedData.questions) {
+        await prisma.question.create({
+          data: {
+            examId: exam.id,
+            type: q.type === 'MCQ' ? 'MCQ' : 'ESSAY',
+            text: q.text,
+            points: parseInt(q.points, 10) || 5,
+            options: q.options || [],
+            correctOption: q.correctOption || null,
+            expectedAnswer: q.expectedAnswer || null,
+            aiMarkingGuide: q.aiMarkingGuide || null,
+          }
+        });
+      }
+    }
+
+    return exam;
   }
 }
 

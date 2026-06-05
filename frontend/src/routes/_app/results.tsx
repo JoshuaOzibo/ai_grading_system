@@ -188,11 +188,17 @@ function Results() {
                   <SelectValue placeholder="Select an exam" />
                 </SelectTrigger>
                 <SelectContent>
-                  {examsData?.map((ex) => (
-                    <SelectItem key={ex.id} value={ex.id}>
-                      {ex.title}
+                  {examsData && examsData.length > 0 ? (
+                    examsData.map((ex) => (
+                      <SelectItem key={ex.id} value={ex.id}>
+                        {ex.title}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="empty" disabled>
+                      No exams available (Empty)
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             )}
