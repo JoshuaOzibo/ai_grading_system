@@ -378,13 +378,14 @@ function UploadAnswers() {
             <p className="mt-1 text-sm text-muted-foreground">
               Supports PDF, JPG, PNG · Max 20 MB per file
             </p>
-            <Button type="button" className="mt-5 rounded-full bg-gradient-primary cursor-pointer">
+            <div className="mt-5 inline-flex items-center justify-center rounded-full bg-gradient-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 transition">
               Choose files
-            </Button>
+            </div>
             <input 
               type="file" 
               className="hidden" 
               multiple 
+              accept="image/*,application/pdf"
               onChange={handleFileChange}
             />
           </label>
