@@ -1,4 +1,4 @@
-import userRepository from '../modules/users/user.repository.js';
+import userRepository from './user.repository.js';
 
 class UserService {
   async getProfile(userId) {
