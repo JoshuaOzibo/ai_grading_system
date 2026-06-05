@@ -89,22 +89,37 @@ export function AuthShell({ title, subtitle, mode }: AuthShellProps) {
         payload.staffId = staffId;
       }
 
-      const response = await api.post<{ message: string }>("/auth/register", payload);
-      return response;
+      const response = await api.post<{ data: { user: any } }>("/auth/register", payload);
+      return response.data;
     },
-    onSuccess: () => {
-      toast.success("Account created successfully! Please log in.");
-      navigate({ to: "/login" });
+    onSuccess: async () => {
+      toast.success("Account created! Logging you in...");
+      try {
+        // Automatically request login token with same credentials
+        const loginResponse = await api.post<{
+          data: { accessToken: string; user: any };
+        }>("/auth/login", { email, password });
+        
+        const loginData = loginResponse.data;
+        tokenManager.setToken(loginData.accessToken);
+        setUser(loginData.user);
+        toast.success("Logged in successfully!");
+        navigate({ to: redirect || "/dashboard" });
+      } catch (err: any) {
+        console.error("Auto login failed:", err);
+        toast.info("Registration complete. Please log in manually.");
+        navigate({ to: "/login" });
+      }
     },
     onError: (err: any) => {
       console.error(err);
+      let msg = err.message || "Registration failed. Verify details and try again.";
       if (err instanceof APIError && err.errors) {
         const firstErr = Array.isArray(err.errors) ? err.errors[0]?.message : null;
-        setErrorMsg(firstErr || err.message);
-      } else {
-        setErrorMsg(err.message || "Registration failed. Verify details and try again.");
+        if (firstErr) msg = firstErr;
       }
-      toast.error(err.message || "Registration failed");
+      setErrorMsg(msg);
+      toast.error(msg);
     },
   });
 
