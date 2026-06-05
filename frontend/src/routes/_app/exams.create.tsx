@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Sparkles, ListChecks, Save, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import { Sparkles, ListChecks, Save, ArrowRight, Loader2, CheckCircle2, X, Plus } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMutation } from "@tanstack/react-query";
@@ -32,22 +32,21 @@ function CreateExam() {
 
   // AI Gen states
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
-  const [topic, setTopic] = useState("");
+  const [topics, setTopics] = useState<string[]>([]);
+  const [currentTopic, setCurrentTopic] = useState("");
   const [aiNumQuestions, setAiNumQuestions] = useState("5");
   const [aiQuestionType, setAiQuestionType] = useState<"MCQ" | "ESSAY">("ESSAY");
 
   const aiGenerateMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api.post<{ data: { id: string } }>("/exams/generate", {
-        topic,
-        numQuestions: parseInt(aiNumQuestions, 10),
-        questionType: aiQuestionType,
-      });
+    mutationFn: async (vars: { topic: string; numQuestions: number; questionType: string }) => {
+      const res = await api.post<{ data: { id: string } }>("/exams/generate", vars);
       return res.data;
     },
     onSuccess: (data) => {
       setCreatedExamId(data.id);
       setAiDialogOpen(false);
+      setTopics([]);
+      setCurrentTopic("");
       setOpen(true);
       toast.success("Exam and questions generated successfully!");
     },
@@ -56,13 +55,39 @@ function CreateExam() {
     },
   });
 
-  const handleAiGenerateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!topic.trim()) {
-      toast.error("Please enter a topic.");
+  const addTopic = () => {
+    const trimmed = currentTopic.trim();
+    if (!trimmed) return;
+    if (topics.includes(trimmed)) {
+      toast.error("Topic has already been added.");
       return;
     }
-    aiGenerateMutation.mutate();
+    setTopics([...topics, trimmed]);
+    setCurrentTopic("");
+  };
+
+  const removeTopic = (indexToRemove: number) => {
+    setTopics(topics.filter((_, index) => index !== indexToRemove));
+  };
+
+  const handleAiGenerateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let finalTopics = [...topics];
+    if (currentTopic.trim() && !topics.includes(currentTopic.trim())) {
+      finalTopics.push(currentTopic.trim());
+    }
+
+    if (finalTopics.length === 0) {
+      toast.error("Please add at least one topic or syllabus point.");
+      return;
+    }
+
+    aiGenerateMutation.mutate({
+      topic: finalTopics.join(", "),
+      numQuestions: parseInt(aiNumQuestions, 10),
+      questionType: aiQuestionType,
+    });
   };
 
   const createExamMutation = useMutation({
@@ -268,15 +293,53 @@ function CreateExam() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="topic">Topic / Subject</Label>
-                <Input
-                  id="topic"
-                  placeholder="e.g. Introduction to React, Data Structures, etc."
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  required
-                />
+              <div className="space-y-3">
+                <Label htmlFor="topic-input">Topics / Syllabus Points</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="topic-input"
+                    placeholder="Type a topic and press Enter..."
+                    value={currentTopic}
+                    onChange={(e) => setCurrentTopic(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addTopic();
+                      }
+                    }}
+                    className="rounded-full bg-background"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    className="rounded-full shrink-0 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+                    onClick={addTopic}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Topics container */}
+                {topics.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-muted/40 border border-border/50 max-h-32 overflow-y-auto">
+                    {topics.map((t, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-background text-foreground rounded-full border border-border/80 shadow-sm hover:shadow-md transition-all duration-200"
+                      >
+                        <span>{t}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeTopic(idx)}
+                          className="text-muted-foreground hover:text-destructive transition-colors rounded-full p-0.5 hover:bg-muted cursor-pointer"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
