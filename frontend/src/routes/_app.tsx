@@ -4,6 +4,7 @@ import { tokenManager } from "@/lib/api-client";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: ({ location }) => {
+    if (typeof window === "undefined") return;
     const token = tokenManager.getToken();
     if (!token) {
       throw redirect({

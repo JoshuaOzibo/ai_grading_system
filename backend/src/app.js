@@ -8,6 +8,9 @@ import router from './routes/index.js';
 
 const app = express();
 
+// Disable Express ETag caching for API responses
+app.disable('etag');
+
 // Security & utility middleware
 app.use(helmet());
 app.use(cors());

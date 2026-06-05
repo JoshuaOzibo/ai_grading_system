@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { tokenManager, api } from "./api-client";
+import { tokenManager, api, APIError } from "./api-client";
 
 export type Role = "admin" | "lecturer" | "student";
 
@@ -75,16 +75,20 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
     try {
       setLoading(true);
-      const response = await api.get<{ data: { user: User } }>("/auth/me");
+      const response = await api.get<{ data: { user: User } }>(`/auth/me?t=${Date.now()}`);
       if (response?.data?.user) {
         setUser(response.data.user);
       } else {
         setUser(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Session check failed:", error);
-      tokenManager.clearToken();
-      setUser(null);
+      // Only clear token if the error is explicitly a 401 Unauthorized response
+      const isUnauthorized = (error instanceof APIError && error.status === 401) || error?.status === 401;
+      if (isUnauthorized) {
+        tokenManager.clearToken();
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
