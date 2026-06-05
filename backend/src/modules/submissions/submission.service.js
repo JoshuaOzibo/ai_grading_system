@@ -222,6 +222,10 @@ class SubmissionService {
 
     return submission;
   }
+
+  async getMySubmissions(studentId) {
+    return await submissionRepository.findByStudentId(studentId);
+  }
 }
 
 export default new SubmissionService();

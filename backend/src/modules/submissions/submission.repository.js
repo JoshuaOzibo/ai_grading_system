@@ -105,6 +105,21 @@ class SubmissionRepository {
       orderBy: { submittedAt: 'desc' },
     });
   }
+
+  async findByStudentId(studentId) {
+    return await prisma.submission.findMany({
+      where: { studentId },
+      include: {
+        exam: {
+          select: {
+            title: true,
+            duration: true,
+          },
+        },
+      },
+      orderBy: { submittedAt: 'desc' },
+    });
+  }
 }
 
 export default new SubmissionRepository();

@@ -74,6 +74,22 @@ class SubmissionController {
       });
     }
   }
+
+  async getMySubmissions(req, res) {
+    try {
+      const submissions = await submissionService.getMySubmissions(req.user.id);
+      return sendSuccess(res, {
+        statusCode: HTTP_STATUS.OK,
+        message: 'My submissions retrieved successfully',
+        data: submissions,
+      });
+    } catch (error) {
+      return sendError(res, {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: error.message,
+      });
+    }
+  }
 }
 
 export default new SubmissionController();
