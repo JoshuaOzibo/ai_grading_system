@@ -47,16 +47,45 @@ interface ExamSession {
   questions: Question[];
 }
 
-const sampleFiles = [
-  { name: "answer-q1.pdf", size: "2.4 MB", progress: 100 },
-  { name: "answer-q2.pdf", size: "1.8 MB", progress: 100 },
-  { name: "answer-q3.pdf", size: "3.1 MB", progress: 64 },
-];
-
 function UploadAnswers() {
   const navigate = useNavigate();
   const { examId } = Route.useSearch();
-  const [files] = useState(sampleFiles);
+  const [files, setFiles] = useState<{ id: string; name: string; size: string; progress: number }[]>([]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const newFiles = Array.from(e.target.files).map((f) => {
+      const sizeMB = (f.size / (1024 * 1024)).toFixed(1);
+      const id = Math.random().toString(36).substring(7);
+      return {
+        id,
+        name: f.name,
+        size: `${sizeMB} MB`,
+        progress: 0,
+      };
+    });
+
+    setFiles((prev) => [...prev, ...newFiles]);
+
+    // Simulate upload progress
+    newFiles.forEach((newFile) => {
+      let currentProgress = 0;
+      const interval = setInterval(() => {
+        currentProgress += Math.floor(Math.random() * 20) + 10;
+        if (currentProgress >= 100) {
+          currentProgress = 100;
+          clearInterval(interval);
+        }
+        setFiles((prev) =>
+          prev.map((item) => (item.id === newFile.id ? { ...item, progress: currentProgress } : item))
+        );
+      }, 150);
+    });
+  };
+
+  const handleRemoveFile = (id: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+  };
 
   // Active exam session states
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
@@ -352,7 +381,12 @@ function UploadAnswers() {
             <Button type="button" className="mt-5 rounded-full bg-gradient-primary cursor-pointer">
               Choose files
             </Button>
-            <input type="file" className="hidden" multiple />
+            <input 
+              type="file" 
+              className="hidden" 
+              multiple 
+              onChange={handleFileChange}
+            />
           </label>
         </CardContent>
       </Card>
@@ -362,7 +396,7 @@ function UploadAnswers() {
           <h3 className="mb-4 font-semibold">Uploads ({files.length})</h3>
           <div className="space-y-3">
             {files.map((f) => (
-              <div key={f.name} className="flex items-center gap-4 rounded-xl border p-3 bg-muted/10 border-border/50">
+              <div key={f.id} className="flex items-center gap-4 rounded-xl border p-3 bg-muted/10 border-border/50">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
                   <FileText className="h-5 w-5 text-muted-foreground" />
                 </div>
@@ -379,9 +413,20 @@ function UploadAnswers() {
                   </div>
                 </div>
                 {f.progress === 100 ? (
-                  <CheckCircle2 className="h-5 w-5 text-success" />
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-success" />
+                    <button 
+                      onClick={() => handleRemoveFile(f.id)} 
+                      className="text-muted-foreground hover:text-destructive cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 ) : (
-                  <button className="text-muted-foreground hover:text-destructive cursor-pointer">
+                  <button 
+                    onClick={() => handleRemoveFile(f.id)} 
+                    className="text-muted-foreground hover:text-destructive cursor-pointer"
+                  >
                     <X className="h-4 w-4" />
                   </button>
                 )}
