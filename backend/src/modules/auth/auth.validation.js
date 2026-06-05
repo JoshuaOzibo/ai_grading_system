@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const matricNumberRegex = /^(AIT|SWD|NCC|CYS)\/HND\/\d{2}\/\d+$/;
+const matricNumberRegex = /^(AIT|SWD|NCC|CYS)\/(HND|ND)\/\d{2,4}\/\d+$/i;
 
 export const registerSchema = z
   .object({

@@ -35,7 +35,8 @@ interface AuthShellProps {
 
 export function AuthShell({ title, subtitle, mode }: AuthShellProps) {
   const navigate = useNavigate();
-  const { redirect } = Route.useSearch();
+  const search = useSearch({ strict: false });
+  const redirect = (search as any)?.redirect;
   const { setUser } = useRole();
 
   // Form states

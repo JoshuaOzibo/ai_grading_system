@@ -18,15 +18,30 @@ class AuthService {
       if (existingStaff) throw new Error('This staff ID is already registered');
     }
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { firstName, lastName, role },
-      },
-    });
+    let authData, authError;
+    try {
+      const result = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { firstName, lastName, role },
+        },
+      });
+      authData = result.data;
+      authError = result.error;
+    } catch (err) {
+      if (err.message === 'Invalid API key' || err.message.includes('API key')) {
+        throw new Error('Authentication service connection is misconfigured. Please configure the correct SUPABASE_ANON_KEY in your backend .env file.');
+      }
+      throw err;
+    }
 
-    if (authError) throw new Error(authError.message);
+    if (authError) {
+      if (authError.message === 'Invalid API key' || authError.message.includes('API key')) {
+        throw new Error('Authentication service connection is misconfigured. Please configure the correct SUPABASE_ANON_KEY in your backend .env file.');
+      }
+      throw new Error(authError.message);
+    }
 
     const dbUser = await authRepository.createUser({
       id: authData.user.id,
@@ -44,9 +59,24 @@ class AuthService {
   }
 
   async login(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    let data, error;
+    try {
+      const result = await supabase.auth.signInWithPassword({ email, password });
+      data = result.data;
+      error = result.error;
+    } catch (err) {
+      if (err.message === 'Invalid API key' || err.message.includes('API key')) {
+        throw new Error('Authentication service connection is misconfigured. Please configure the correct SUPABASE_ANON_KEY in your backend .env file.');
+      }
+      throw err;
+    }
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.message === 'Invalid API key' || error.message.includes('API key')) {
+        throw new Error('Authentication service connection is misconfigured. Please configure the correct SUPABASE_ANON_KEY in your backend .env file.');
+      }
+      throw new Error(error.message);
+    }
 
     const dbUser = await authRepository.findUserById(data.user.id);
     if (!dbUser) throw new Error('User profile not found');
@@ -59,8 +89,20 @@ class AuthService {
   }
 
   async logout(token) {
-    const { error } = await supabase.auth.signOut(token);
-    if (error) throw new Error(error.message);
+    try {
+      const { error } = await supabase.auth.signOut(token);
+      if (error) {
+        if (error.message === 'Invalid API key' || error.message.includes('API key')) {
+          throw new Error('Authentication service connection is misconfigured. Please configure the correct SUPABASE_ANON_KEY in your backend .env file.');
+        }
+        throw new Error(error.message);
+      }
+    } catch (err) {
+      if (err.message === 'Invalid API key' || err.message.includes('API key')) {
+        throw new Error('Authentication service connection is misconfigured. Please configure the correct SUPABASE_ANON_KEY in your backend .env file.');
+      }
+      throw err;
+    }
   }
 }
 
