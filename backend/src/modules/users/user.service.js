@@ -11,10 +11,11 @@ class UserService {
     const user = await userRepository.findById(userId);
     if (!user) throw new Error('User not found');
 
-    // Only allow updating first name and last name
+    // Only allow updating first name, last name, and avatar URL
     const allowedUpdates = {};
     if (updateData.firstName !== undefined) allowedUpdates.firstName = updateData.firstName;
     if (updateData.lastName !== undefined) allowedUpdates.lastName = updateData.lastName;
+    if (updateData.avatarUrl !== undefined) allowedUpdates.avatarUrl = updateData.avatarUrl;
 
     // Mark profile as complete if they have first and last names
     const firstName = allowedUpdates.firstName || user.firstName;

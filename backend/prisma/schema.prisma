@@ -21,6 +21,7 @@ model User {
   role              Role
   matricNumber      String?      @unique // Required for STUDENT
   staffId           String?      @unique // Required for LECTURER
+  avatarUrl         String?
   isVerified        Boolean      @default(true) // Set to true for now per user request
   isProfileComplete Boolean      @default(false)
   exams             Exam[]

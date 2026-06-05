@@ -26,6 +26,7 @@ interface UserProfileResponse {
     role: "STUDENT" | "LECTURER" | "ADMIN";
     matricNumber?: string;
     staffId?: string;
+    avatarUrl?: string | null;
   };
 }
 
@@ -39,9 +40,20 @@ function Settings() {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const url = URL.createObjectURL(file);
-      setAvatarUrl(url);
-      toast.success("Avatar image uploaded successfully!");
+      
+      // Limit file size to 1MB
+      if (file.size > 1024 * 1024) {
+        toast.error("Avatar image size must be less than 1MB");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setAvatarUrl(base64String);
+        toast.success("Avatar selected successfully!");
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -50,6 +62,7 @@ function Settings() {
     if (user) {
       setFirstName(user.firstName || "");
       setLastName(user.lastName || "");
+      setAvatarUrl(user.avatarUrl || null);
     }
   }, [user]);
 
@@ -59,6 +72,7 @@ function Settings() {
       const res = await api.patch<UserProfileResponse>("/users/profile", {
         firstName,
         lastName,
+        avatarUrl,
       });
       return res.data;
     },

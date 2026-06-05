@@ -27,7 +27,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useRole, type Role } from "@/lib/role-context";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -166,6 +166,7 @@ export function AppSidebar() {
           <DropdownMenuTrigger asChild>
             <button className="flex w-full items-center gap-2 px-2 py-2 hover:bg-muted/50 rounded-lg transition text-left cursor-pointer">
               <Avatar className="h-8 w-8">
+                {user?.avatarUrl && <AvatarImage src={user.avatarUrl} />}
                 <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
                   {user
                     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()

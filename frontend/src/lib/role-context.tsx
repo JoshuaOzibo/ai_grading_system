@@ -11,6 +11,7 @@ export interface User {
   role: "STUDENT" | "LECTURER" | "ADMIN";
   matricNumber?: string;
   staffId?: string;
+  avatarUrl?: string | null;
 }
 
 interface RoleContextValue {
