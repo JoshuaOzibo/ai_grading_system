@@ -1,25 +1,76 @@
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useNavigate } from "@tanstack/react-router";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Bell, Search, Sparkles, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useRole, type Role } from "@/lib/role-context";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { useRole } from "@/lib/role-context";
 import { useState } from "react";
 import { AIAssistantPanel } from "@/components/ai-assistant-panel";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api-client";
 
 export function DashboardLayout() {
-  const { role, setRole, loading } = useRole();
+  const { role, loading } = useRole();
   const [aiOpen, setAiOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Fetch exams
+  const { data: examsData } = useQuery({
+    queryKey: ["exams"],
+    queryFn: async () => {
+      const res = await api.get<{ data: any[] }>("/exams");
+      return res.data;
+    },
+  });
+
+  // Fetch submissions (if student)
+  const { data: studentSubmissions } = useQuery({
+    queryKey: ["student-submissions"],
+    queryFn: async () => {
+      if (role !== "student") return [];
+      const res = await api.get<{ data: any[] }>("/submissions");
+      return res.data;
+    },
+    enabled: role === "student",
+  });
+
+  // Fetch all users (if admin)
+  const { data: usersData } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      if (role !== "admin") return [];
+      const res = await api.get<{ data: any[] }>("/users");
+      return res.data;
+    },
+    enabled: role === "admin",
+  });
+
+  // Calculate unread count
+  let unreadCount = 0;
+  if (examsData) {
+    const exams = examsData || [];
+    if (role === "student") {
+      const submissions = studentSubmissions || [];
+      // 1. Exam Available
+      exams.forEach((ex) => {
+        const alreadyTaken = submissions.some((sub) => sub.examId === ex.id);
+        if (!alreadyTaken) {
+          unreadCount++;
+        }
+      });
+      // 2. Submissions
+      submissions.forEach((sub) => {
+        if (sub.status === "STARTED") {
+          unreadCount++;
+        }
+      });
+    } else if (role === "admin") {
+      const users = usersData || [];
+      const unverifiedLecturers = users.filter((u) => u.role === "LECTURER" && !u.isVerified);
+      unreadCount += unverifiedLecturers.length;
+    }
+  }
 
   if (loading) {
     return (
@@ -58,35 +109,19 @@ export function DashboardLayout() {
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span className="hidden sm:inline">AI Assistant</span>
               </Button>
-              <Button variant="ghost" size="icon" className="relative rounded-full">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative rounded-full cursor-pointer"
+                onClick={() => navigate({ to: "/notifications" })}
+              >
                 <Bell className="h-4 w-4" />
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
+                {unreadCount > 0 && (
+                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="rounded-full capitalize">
-                    {role} view
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Switch role (demo)</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {(["admin", "lecturer", "student"] as Role[]).map((r) => (
-                    <DropdownMenuItem
-                      key={r}
-                      onClick={() => setRole(r)}
-                      className="capitalize"
-                    >
-                      {r}
-                      {role === r && (
-                        <Badge variant="secondary" className="ml-auto text-[10px]">
-                          active
-                        </Badge>
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </header>
           <main className="flex-1 p-4 md:p-8 animate-fade-in">
