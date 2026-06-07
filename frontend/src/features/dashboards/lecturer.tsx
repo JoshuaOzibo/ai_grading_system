@@ -99,6 +99,14 @@ export function LecturerDashboard() {
   // Greet with user's last name
   const greetingName = user?.lastName ? `Dr. ${user.lastName}` : "Lecturer";
 
+  // Determine greeting based on current time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
   // Compute stats
   const stats = analyticsData?.stats;
   const averageScore = stats ? Math.round(stats.averageScore) : 0;
@@ -142,7 +150,7 @@ export function LecturerDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Good morning, ${greetingName}`}
+        title={`${getGreeting()}, ${greetingName}`}
         description="Here's a review of your exams' grading metrics and student progress reports."
         actions={
           <>
