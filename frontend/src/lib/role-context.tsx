@@ -54,16 +54,15 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
-    try {
-      await api.post("/auth/logout").catch(() => {});
-    } finally {
-      tokenManager.clearToken();
-      setUserState(null);
-      setRoleState("student");
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
+  const logout = () => {
+    // Fire-and-forget logout request to backend, don't block client redirection
+    api.post("/auth/logout").catch(() => {});
+
+    tokenManager.clearToken();
+    setUserState(null);
+    setRoleState("student");
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
     }
   };
 
