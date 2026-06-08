@@ -72,6 +72,7 @@ function CreateExam() {
 
   const handleAiGenerateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     let finalTopics = [...topics];
     if (currentTopic.trim() && !topics.includes(currentTopic.trim())) {

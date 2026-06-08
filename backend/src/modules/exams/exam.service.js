@@ -106,12 +106,22 @@ class ExamService {
   }
 
   async generateExamWithAI(lecturerId, { topic, numQuestions, questionType }) {
-    if (!topic) throw new Error('Topic is required');
+    console.log(`[AI Exam Generation] Received request from Lecturer ID: ${lecturerId}`);
+    console.log(`[AI Exam Generation] Parameters - Topic: "${topic}", Question Count: ${numQuestions}, Type: "${questionType}"`);
+
+    if (!topic) {
+      console.error('[AI Exam Generation] Error: Topic is required');
+      throw new Error('Topic is required');
+    }
     const count = parseInt(numQuestions, 10) || 5;
     const type = questionType === 'MCQ' ? 'MCQ' : 'ESSAY';
 
+    console.log(`[AI Exam Generation] Invoking AI Service to generate ${count} ${type} questions on topic...`);
     // Call AI service to generate exam and questions
     const generatedData = await generateExamQuestions(topic, count, type);
+
+    console.log(`[AI Exam Generation] AI response received successfully. Exam Title: "${generatedData.title}"`);
+    console.log(`[AI Exam Generation] Creating exam in database...`);
 
     const startDate = new Date();
     const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
@@ -127,11 +137,14 @@ class ExamService {
       lecturerId,
     });
 
+    console.log(`[AI Exam Generation] Created Exam record. ID: ${exam.id}`);
+
     // Create all generated questions in the database
     const { default: prisma } = await import('../../utils/prisma.js');
     if (generatedData.questions && generatedData.questions.length > 0) {
-      for (const q of generatedData.questions) {
-        await prisma.question.create({
+      console.log(`[AI Exam Generation] Saving ${generatedData.questions.length} questions to database...`);
+      for (const [index, q] of generatedData.questions.entries()) {
+        const createdQ = await prisma.question.create({
           data: {
             examId: exam.id,
             type: q.type === 'MCQ' ? 'MCQ' : 'ESSAY',
@@ -143,9 +156,13 @@ class ExamService {
             aiMarkingGuide: q.aiMarkingGuide || null,
           }
         });
+        console.log(`   -> Saved Question ${index + 1}: "${q.text.substring(0, 50)}..." [ID: ${createdQ.id}]`);
       }
+    } else {
+      console.warn('[AI Exam Generation] Warning: No questions returned from the generator.');
     }
 
+    console.log(`[AI Exam Generation] Complete. Successfully built Exam ID: ${exam.id}`);
     return exam;
   }
 }
