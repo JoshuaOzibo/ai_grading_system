@@ -68,10 +68,23 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(url, {
-    ...restOptions,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...restOptions,
+      headers,
+    });
+  } catch (networkErr: any) {
+    // Network failure (offline, server down, DNS error etc.)
+    throw new APIError({
+      status: 0,
+      message:
+        networkErr?.message?.includes("Failed to fetch") ||
+        networkErr?.message?.includes("fetch")
+          ? "No network connection. Please check your internet and try again."
+          : networkErr?.message || "Network error. Unable to reach the server.",
+    });
+  }
 
   // Handle unauthorized/expired token globally
   if (response.status === 401) {

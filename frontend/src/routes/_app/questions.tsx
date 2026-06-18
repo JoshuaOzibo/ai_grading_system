@@ -77,6 +77,7 @@ function Questions() {
   const [expectedAnswer, setExpectedAnswer] = useState("");
   const [aiMarkingGuide, setAiMarkingGuide] = useState("");
   const [isAiSuggesting, setIsAiSuggesting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Fetch Exams list (if no examId in search param, to let user choose)
   const { data: examsData, isLoading: isLoadingExams } = useQuery({
@@ -136,7 +137,9 @@ function Questions() {
       toast.success("Question added successfully!");
     },
     onError: (err: any) => {
-      toast.error(err.message || "Failed to add question");
+      const msg = err.message || "Failed to add question. Please try again.";
+      setSubmitError(msg);
+      toast.error(msg);
     },
   });
 
@@ -152,7 +155,9 @@ function Questions() {
       toast.success("Question updated successfully!");
     },
     onError: (err: any) => {
-      toast.error(err.message || "Failed to update question");
+      const msg = err.message || "Failed to update question. Please try again.";
+      setSubmitError(msg);
+      toast.error(msg);
     },
   });
 
@@ -172,6 +177,7 @@ function Questions() {
 
   const resetForm = () => {
     setEditingQuestion(null);
+    setSubmitError(null);
     setType("ESSAY");
     setText("");
     setPoints("5");
@@ -186,10 +192,12 @@ function Questions() {
 
   const handleOpenCreateDialog = () => {
     resetForm();
+    setSubmitError(null);
     setDialogOpen(true);
   };
 
   const handleOpenEditDialog = (q: Question) => {
+    setSubmitError(null);
     setEditingQuestion(q);
     setType(q.type);
     setText(q.text);
@@ -625,6 +633,14 @@ function Questions() {
                     onChange={(e) => setAiMarkingGuide(e.target.value)}
                   />
                 </div>
+              </div>
+            )}
+
+            {/* Inline error banner */}
+            {submitError && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{submitError}</span>
               </div>
             )}
 
