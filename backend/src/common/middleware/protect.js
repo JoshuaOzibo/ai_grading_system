@@ -19,24 +19,26 @@ export const verifyToken = async (req, res, next) => {
     let user = null;
     let authError = null;
 
+    // 1. Try local JWT verification first (fast, offline)
     try {
-      const { data, error } = await supabase.auth.getUser(token);
-      user = data?.user;
-      authError = error;
-    } catch (err) {
-      authError = err;
+      const decoded = jwt.verify(token, env.jwtSecret);
+      user = { id: decoded.id };
+    } catch (jwtErr) {
+      // 2. If local verification fails, fall back to trying Supabase auth
+      try {
+        const { data, error } = await supabase.auth.getUser(token);
+        user = data?.user;
+        authError = error;
+      } catch (err) {
+        authError = err;
+      }
     }
 
     if (authError || !user) {
-      try {
-        const decoded = jwt.verify(token, env.jwtSecret);
-        user = { id: decoded.id };
-      } catch (jwtErr) {
-        return res.status(401).json({
-          status: 'error',
-          message: 'Invalid or expired token',
-        });
-      }
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid or expired token',
+      });
     }
 
     const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
