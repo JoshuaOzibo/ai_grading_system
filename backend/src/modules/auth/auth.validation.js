@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-const matricNumberRegex = /^(AIT|SWD|NCC|CYS)\/(HND|ND)\/\d{2,4}\/\d+$/i;
-
 export const registerSchema = z
   .object({
     firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -14,16 +12,10 @@ export const registerSchema = z
   })
   .superRefine((data, ctx) => {
     if (data.role === 'STUDENT') {
-      if (!data.matricNumber) {
+      if (!data.matricNumber || data.matricNumber.trim().length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'Students must provide a matricNumber',
-          path: ['matricNumber'],
-        });
-      } else if (!matricNumberRegex.test(data.matricNumber)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Invalid matric format. Expected: AIT/HND/24/00036 (Departments: AIT, SWD, NCC, CYS)',
           path: ['matricNumber'],
         });
       }

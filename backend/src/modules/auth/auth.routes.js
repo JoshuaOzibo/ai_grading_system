@@ -10,10 +10,12 @@ const validate = (schema) => (req, res, next) => {
     schema.parse(req.body);
     next();
   } catch (error) {
+    const issues = error.issues || error.errors || [];
+    console.error('Validation error details:', issues);
     return res.status(400).json({
       status: 'error',
       message: 'Validation failed',
-      errors: error.errors,
+      errors: issues,
     });
   }
 };

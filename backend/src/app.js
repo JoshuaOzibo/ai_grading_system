@@ -29,6 +29,7 @@ app.use((req, res) => {
   res.status(404).json({ status: 'error', message: `Route ${req.originalUrl} not found` });
 });
 app.use((err, req, res, next) => {
+  console.error('Unhandled API error:', err);
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     status: err.status || 'error',

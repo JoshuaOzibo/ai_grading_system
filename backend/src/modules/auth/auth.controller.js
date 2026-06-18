@@ -11,10 +11,11 @@ class AuthController {
         data: { user: result.dbUser },
       });
     } catch (error) {
+      console.error('Registration error:', error);
       return sendError(res, { statusCode: 400, message: error.message });
     }
   }
-
+ 
   async login(req, res) {
     try {
       const { email, password } = req.body;
@@ -29,6 +30,7 @@ class AuthController {
         },
       });
     } catch (error) {
+      console.error('Login error:', error);
       return sendError(res, { statusCode: 401, message: error.message });
     }
   }

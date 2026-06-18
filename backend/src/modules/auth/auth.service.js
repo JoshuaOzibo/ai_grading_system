@@ -47,7 +47,12 @@ class AuthService {
     }
 
     if (authError) {
-      if (authError.message === 'Invalid API key' || authError.message.includes('API key')) {
+      if (
+        authError.message === 'Invalid API key' ||
+        authError.message.includes('API key') ||
+        authError.message.includes('fetch failed') ||
+        authError.message.includes('ENOTFOUND')
+      ) {
         localUserId = crypto.randomUUID();
       } else {
         throw new Error(authError.message);
@@ -103,7 +108,12 @@ class AuthService {
     }
 
     if (error) {
-      if (error.message === 'Invalid API key' || error.message.includes('API key')) {
+      if (
+        error.message === 'Invalid API key' ||
+        error.message.includes('API key') ||
+        error.message.includes('fetch failed') ||
+        error.message.includes('ENOTFOUND')
+      ) {
         const dbUser = await authRepository.findUserByEmail(email);
         if (!dbUser) throw new Error('User profile not found');
         
@@ -136,7 +146,12 @@ class AuthService {
     try {
       const { error } = await supabase.auth.signOut(token);
       if (error) {
-        if (error.message === 'Invalid API key' || error.message.includes('API key')) {
+        if (
+          error.message === 'Invalid API key' ||
+          error.message.includes('API key') ||
+          error.message.includes('fetch failed') ||
+          error.message.includes('ENOTFOUND')
+        ) {
           return;
         }
         throw new Error(error.message);
