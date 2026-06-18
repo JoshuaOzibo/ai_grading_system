@@ -93,12 +93,18 @@ function CreateExam() {
 
   const createExamMutation = useMutation({
     mutationFn: async () => {
+      // Convert datetime-local values to proper ISO 8601 strings with timezone
+      // datetime-local gives "YYYY-MM-DDTHH:mm" (local time, no timezone suffix)
+      // new Date() interprets this correctly as local time, .toISOString() sends it as UTC ISO
+      const startISO = new Date(startDate).toISOString();
+      const endISO = new Date(endDate).toISOString();
+
       const payload = {
         title,
         description,
         duration: parseInt(duration, 10),
-        startDate,
-        endDate,
+        startDate: startISO,
+        endDate: endISO,
       };
 
       const res = await api.post<{ data: { id: string } }>("/exams", payload);
@@ -123,8 +129,14 @@ function CreateExam() {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const now = new Date();
+
     if (start >= end) {
       toast.error("Start date must be before end date.");
+      return;
+    }
+    if (end <= now) {
+      toast.error("End date must be in the future.");
       return;
     }
 

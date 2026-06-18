@@ -20,6 +20,22 @@ class ExamRepository {
     return await prisma.exam.findMany({
       where: { lecturerId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        lecturer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            questions: true,
+            submissions: true,
+          },
+        },
+      },
     });
   }
 
@@ -27,6 +43,22 @@ class ExamRepository {
     return await prisma.exam.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { startDate: 'asc' },
+      include: {
+        lecturer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            questions: true,
+            submissions: true,
+          },
+        },
+      },
     });
   }
 

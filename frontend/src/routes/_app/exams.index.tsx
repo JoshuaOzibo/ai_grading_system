@@ -243,7 +243,7 @@ function Exams() {
                   
                   {role !== "student" && (
                     <p className="mt-2 text-[10px] text-muted-foreground">
-                      Created by {e.lecturer.firstName} {e.lecturer.lastName}
+                      Created by {e.lecturer?.firstName ?? ""} {e.lecturer?.lastName ?? ""}
                     </p>
                   )}
 
