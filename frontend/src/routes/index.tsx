@@ -78,27 +78,28 @@ function Landing() {
         <div className="container relative mx-auto grid gap-12 px-4 py-20 md:grid-cols-2 md:py-28">
           <div className="animate-slide-up">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background/80 px-3 py-1 text-xs font-medium text-primary backdrop-blur">
-              <Sparkles className="h-3 w-3" /> Powered by AI · For modern classrooms
+              <Sparkles className="h-3 w-3" /> Final Year Project · Department of Computer Science
             </div>
             <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight md:text-6xl">
-              Grade exams in <span className="text-gradient">minutes</span>, not weekends.
+              Grade scripts in <span className="text-gradient">minutes</span>,
+              not the whole weekend.
             </h1>
             <p className="mt-5 max-w-lg text-lg text-muted-foreground">
-              GradeAI helps lecturers create exams, collect answers, and grade them automatically
-              with AI — so you can spend more time teaching.
+              GradeAI lets lecturers set exams, collect student submissions, and get
+              AI-generated scores with detailed feedback reviewed and approved by you.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="rounded-full bg-gradient-primary shadow-glow">
                 <Link to="/signup">
-                  Start grading free <ArrowRight className="h-4 w-4" />
+                  Get started free <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="rounded-full">
-                <Link to="/dashboard">Live demo</Link>
+                <Link to="/dashboard">See the dashboard</Link>
               </Button>
             </div>
             <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
-              {["No setup fees", "FERPA aligned", "Cancel anytime"].map((t) => (
+              {["Objective & theory questions", "Lecturer-reviewed scores", "Class analytics"].map((t) => (
                 <div key={t} className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-success" /> {t}
                 </div>
@@ -106,14 +107,22 @@ function Landing() {
             </div>
           </div>
           <div className="relative animate-fade-in">
-            <div className="absolute -inset-8 rounded-3xl bg-gradient-primary opacity-20 blur-3xl" />
-            <img
-              src={heroImg}
-              alt="AI grading exam papers"
-              width={1280}
-              height={960}
-              className="relative rounded-3xl shadow-glow animate-float"
-            />
+            {/* Ambient glow behind the image */}
+            <div className="absolute -inset-6 rounded-3xl bg-gradient-primary opacity-25 blur-3xl" />
+            <div className="relative overflow-hidden rounded-3xl shadow-glow ring-1 ring-primary/20">
+              <img
+                src={heroImg}
+                alt="A university lecturer grading exam scripts with GradeAI on his laptop"
+                width={1280}
+                height={960}
+                className="w-full object-cover animate-float"
+              />
+              {/* Bottom caption pill */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full border border-white/20 bg-background/70 px-4 py-2 text-xs font-medium backdrop-blur-md whitespace-nowrap">
+                <span className="inline-block h-2 w-2 rounded-full bg-success animate-pulse" />
+                AI grading in progress — 47 scripts processed
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -142,7 +151,7 @@ function Landing() {
             Everything you need to assess at scale
           </h2>
           <p className="mt-4 text-muted-foreground">
-            From question creation to deep analytics — one platform for the entire grading
+            From question creation to deep analytics one platform for the entire grading
             lifecycle.
           </p>
         </div>

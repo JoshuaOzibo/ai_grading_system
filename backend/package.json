@@ -6,6 +6,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
+    "db:seed": "node src/database/seed.js",
     "db:studio": "prisma studio"
   },
   "dependencies": {
