@@ -15,6 +15,9 @@ const env = {
 
   // JWT (for any custom signing alongside Supabase)
   jwtSecret: process.env.JWT_SECRET,
+
+  // AI
+  deepseekApiKey: process.env.DEEPSEEK_API_KEY,
 };
 
 // Validate critical env variables at startup

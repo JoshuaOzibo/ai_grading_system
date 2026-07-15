@@ -93,9 +93,6 @@ function CreateExam() {
 
   const createExamMutation = useMutation({
     mutationFn: async () => {
-      // Convert datetime-local values to proper ISO 8601 strings with timezone
-      // datetime-local gives "YYYY-MM-DDTHH:mm" (local time, no timezone suffix)
-      // new Date() interprets this correctly as local time, .toISOString() sends it as UTC ISO
       const startISO = new Date(startDate).toISOString();
       const endISO = new Date(endDate).toISOString();
 

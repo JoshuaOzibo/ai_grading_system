@@ -1,71 +1,40 @@
-// AI Service — integrates with Google Gemini API & OpenAI ChatGPT API using native fetch
+// AI Service — integrates with DeepSeek API using native fetch
 // Used by: modules/questions (AI answer generation), modules/submissions (AI essay grading)
 
+import env from '../config/env.js';
+
 /**
- * Helper to call AI API. Automatically routing to OpenAI if API key starts with "sk-",
- * otherwise falling back to Google Gemini.
+ * Helper to call AI API. Queries the DeepSeek endpoint using the deepseek-v4-flash model.
  * @param {string} prompt - Prompt to submit to AI
  * @returns {Promise<string>}
  */
 const callAI = async (prompt) => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = env.deepseekApiKey;
 
-  if (apiKey.startsWith("sk-")) {
-    // Call OpenAI
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" }
-      })
-    });
+  const response = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: "deepseek-v4-flash",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" }
+    })
+  });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errText}`);
-    }
-
-    const data = await response.json();
-    const textResponse = data?.choices?.[0]?.message?.content;
-    if (!textResponse) {
-      throw new Error("Empty response received from OpenAI API");
-    }
-    return textResponse;
-  } else {
-    // Call Gemini
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini API error: ${response.status} - ${errText}`);
-    }
-
-    const data = await response.json();
-    const textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!textResponse) {
-      throw new Error("Empty response received from Gemini API");
-    }
-    return textResponse;
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`DeepSeek API error: ${response.status} - ${errText}`);
   }
+
+  const data = await response.json();
+  const textResponse = data?.choices?.[0]?.message?.content;
+  if (!textResponse) {
+    throw new Error("Empty response received from DeepSeek API");
+  }
+  return textResponse;
 };
 
 /**
@@ -74,10 +43,10 @@ const callAI = async (prompt) => {
  * @returns {Promise<{ answer: string, markingGuide: string }>}
  */
 export const generateIdealAnswer = async (question) => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = env.deepseekApiKey;
 
-  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    console.warn('AI API key is not set. Returning mock ideal answer and marking guide.');
+  if (!apiKey || apiKey === 'your_deepseek_api_key_here') {
+    console.warn('DeepSeek API key is not set. Returning mock ideal answer and marking guide.');
     return {
       answer: `This is a mock ideal answer for the question: "${question}". It outlines the core concepts, definitions, and key points expected in a high-scoring student response.`,
       markingGuide: `Marking Guide:\n- 40% for clear definition of terms.\n- 40% for accurate explanation of processes.\n- 20% for relevant examples or structured presentation.`,
@@ -110,10 +79,10 @@ Respond strictly with a JSON object in this format (no other text, no markdown f
  * @returns {Promise<{ score: number, feedback: string }>}
  */
 export const gradeEssay = async (question, studentAnswer, expectedAnswer, markingGuide = '') => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = env.deepseekApiKey;
 
-  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    console.warn('AI API key is not set. Returning mock grade and feedback.');
+  if (!apiKey || apiKey === 'your_deepseek_api_key_here') {
+    console.warn('DeepSeek API key is not set. Returning mock grade and feedback.');
     return {
       score: 7.5,
       feedback: 'This is a mock AI grading feedback. The student demonstrated good understanding of core concepts, though some advanced details could be expanded.',
@@ -155,10 +124,10 @@ Respond strictly with a JSON object in this format (no other text, no markdown f
  * @returns {Promise<{ title: string, description: string, questions: Array }>}
  */
 export const generateExamQuestions = async (topic, numQuestions, questionType) => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = env.deepseekApiKey;
 
-  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    console.warn('AI API key is not set. Returning mock generated exam.');
+  if (!apiKey || apiKey === 'your_deepseek_api_key_here') {
+    console.warn('DeepSeek API key is not set. Returning mock generated exam.');
     const questions = [];
     for (let i = 1; i <= numQuestions; i++) {
       if (questionType === 'MCQ') {
