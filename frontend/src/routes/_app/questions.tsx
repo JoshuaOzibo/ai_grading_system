@@ -291,12 +291,12 @@ function Questions() {
       />
 
       {/* Exam Selector Dropdown */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center bg-card p-4 rounded-xl border border-border/50">
-        <div className="flex items-center gap-2 text-sm font-medium">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center bg-card p-4 rounded-xl border border-border/50 min-w-0 max-w-full overflow-hidden">
+        <div className="flex items-center gap-2 text-sm font-medium shrink-0">
           <BookOpen className="h-4 w-4 text-primary" />
           <span>Active Exam:</span>
         </div>
-        <div className="flex-1 max-w-md">
+        <div className="flex-1 w-full sm:max-w-md min-w-0">
           {isLoadingExams ? (
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
           ) : (
@@ -304,7 +304,7 @@ function Questions() {
               value={selectedExamId}
               onValueChange={(val) => navigate({ to: "/questions", search: { examId: val } })}
             >
-              <SelectTrigger className="w-full bg-background rounded-full">
+              <SelectTrigger className="w-full bg-background rounded-full min-w-0">
                 <SelectValue placeholder="Select an exam" />
               </SelectTrigger>
               <SelectContent>
@@ -324,7 +324,7 @@ function Questions() {
           )}
         </div>
         {activeExam && (
-          <Badge variant="outline" className="sm:ml-auto w-fit capitalize bg-background">
+          <Badge variant="outline" className="sm:ml-auto w-fit capitalize bg-background shrink-0">
             Status: {activeExam.status.toLowerCase()}
           </Badge>
         )}
@@ -373,7 +373,7 @@ function Questions() {
           )}
         </div>
       ) : (
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="all" className="w-full min-w-0">
           <TabsList className="rounded-full bg-muted">
             <TabsTrigger value="all" className="rounded-full">All ({questions.length})</TabsTrigger>
             <TabsTrigger value="mcq" className="rounded-full">MCQ</TabsTrigger>
@@ -386,22 +386,22 @@ function Questions() {
               return q.type.toLowerCase() === tab;
             });
             return (
-              <TabsContent key={tab} value={tab} className="mt-4 space-y-3">
+              <TabsContent key={tab} value={tab} className="mt-4 space-y-3 min-w-0">
                 {list.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-6 text-center">
                     No questions match this filter.
                   </p>
                 ) : (
                   list.map((q, i) => (
-                    <Card key={q.id} className="shadow-card transition hover:shadow-soft bg-background border-border/60">
-                      <CardContent className="flex items-start gap-4 p-4">
-                        <div className="mt-1 text-muted-foreground">
+                    <Card key={q.id} className="shadow-card transition hover:shadow-soft bg-background border-border/60 overflow-hidden">
+                      <CardContent className="flex items-start gap-2.5 sm:gap-4 p-3.5 sm:p-4 min-w-0">
+                        <div className="mt-1 text-muted-foreground hidden sm:block shrink-0">
                           <GripVertical className="h-4 w-4" />
                         </div>
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-bold">
                           {i + 1}
                         </div>
-                        <div className="flex-1 space-y-1">
+                        <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <Badge
                               variant="secondary"
@@ -415,24 +415,24 @@ function Questions() {
                             </Badge>
                             <span className="text-xs text-muted-foreground font-semibold">{q.points} pts</span>
                           </div>
-                          <p className="text-sm font-medium text-foreground pr-4 pt-1">{q.text}</p>
+                          <p className="text-sm font-medium text-foreground pt-1 break-words">{q.text}</p>
                           
                           {q.type === "MCQ" && q.options && (
-                            <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t text-xs">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-2 border-t text-xs">
                               {q.options.map((opt, idx) => {
                                 const letter = String.fromCharCode(65 + idx); // A, B, C, D
                                 const isCorrect = q.correctOption === letter;
                                 return (
                                   <div
                                     key={idx}
-                                    className={`p-2 rounded-lg border ${
+                                    className={`p-2 rounded-lg border flex items-start gap-1.5 break-words ${
                                       isCorrect
                                         ? "border-success/40 bg-success/10 text-success font-medium"
                                         : "border-border/60 bg-muted/30"
                                     }`}
                                   >
-                                    <span className="font-bold mr-1.5">{letter}.</span>
-                                    {opt}
+                                    <span className="font-bold shrink-0">{letter}.</span>
+                                    <span className="min-w-0 break-words">{opt}</span>
                                   </div>
                                 );
                               })}
@@ -440,13 +440,13 @@ function Questions() {
                           )}
 
                           {q.type === "ESSAY" && q.expectedAnswer && (
-                            <div className="mt-3 pt-2 border-t text-xs space-y-1 bg-muted/20 p-2.5 rounded-lg border border-border/40">
+                            <div className="mt-3 pt-2 border-t text-xs space-y-1 bg-muted/20 p-2.5 rounded-lg border border-border/40 min-w-0">
                               <p className="font-semibold text-foreground">Expected Answer Snippet:</p>
-                              <p className="text-muted-foreground line-clamp-2">{q.expectedAnswer}</p>
+                              <p className="text-muted-foreground line-clamp-2 break-words">{q.expectedAnswer}</p>
                             </div>
                           )}
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 shrink-0 ml-auto">
                           {activeExam?.status === "DRAFT" ? (
                             <>
                               <Button
@@ -468,7 +468,7 @@ function Questions() {
                               </Button>
                             </>
                           ) : (
-                            <Badge variant="outline">View Only</Badge>
+                            <Badge variant="outline" className="text-xs shrink-0">View Only</Badge>
                           )}
                         </div>
                       </CardContent>

@@ -89,7 +89,7 @@ export function DashboardLayout() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-muted/30">
         <AppSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col min-w-0 max-w-full overflow-x-hidden">
           <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md">
             <SidebarTrigger />
             <div className="relative hidden md:block">
@@ -124,7 +124,7 @@ export function DashboardLayout() {
               </Button>
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-8 animate-fade-in">
+          <main className="flex-1 min-w-0 max-w-full p-4 md:p-8 animate-fade-in overflow-x-hidden">
             <Outlet />
           </main>
         </div>
