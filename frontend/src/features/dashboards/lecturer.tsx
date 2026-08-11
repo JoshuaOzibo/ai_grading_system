@@ -96,8 +96,8 @@ export function LecturerDashboard() {
     enabled: !!activeExamId,
   });
 
-  // Greet with user's last name
-  const greetingName = user?.lastName ? `Dr. ${user.lastName}` : "Lecturer";
+  // Greet with user's first name
+  const greetingName = user?.firstName || (user?.lastName ? `Dr. ${user.lastName}` : "Lecturer");
 
   // Determine greeting based on current time
   const getGreeting = () => {
@@ -147,10 +147,20 @@ export function LecturerDashboard() {
     document.body.removeChild(link);
   };
 
+  const renderBoldFirstLetter = (str: string) => {
+    if (!str) return "";
+    return (
+      <span>
+        <span className="font-extrabold text-primary">{str.charAt(0)}</span>
+        {str.slice(1)}
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${getGreeting()}, ${greetingName}`}
+        title={<>{getGreeting()}, {renderBoldFirstLetter(greetingName)}</>}
         description="Here's a review of your exams' grading metrics and student progress reports."
         actions={
           <>

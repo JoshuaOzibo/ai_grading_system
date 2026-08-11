@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api-client";
+import { useRole } from "@/lib/role-context";
 
 interface GlobalStats {
   usersByRole: { role: string; count: number }[];
@@ -42,8 +43,28 @@ interface UserProfile {
 
 export function AdminDashboard() {
   const queryClient = useQueryClient();
+  const { user } = useRole();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const firstName = user?.firstName || "Admin";
+
+  const renderBoldFirstLetter = (str: string) => {
+    if (!str) return "";
+    return (
+      <span>
+        <span className="font-extrabold text-primary">{str.charAt(0)}</span>
+        {str.slice(1)}
+      </span>
+    );
+  };
 
   // Fetch global stats
   const { data: globalStats, isLoading: isLoadingStats } = useQuery({
@@ -105,7 +126,7 @@ export function AdminDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="System Administration"
+        title={<>{getGreeting()}, {renderBoldFirstLetter(firstName)}</>}
         description="Monitor user activities, evaluate global statistics, and authorize lecturer registrations."
       />
 

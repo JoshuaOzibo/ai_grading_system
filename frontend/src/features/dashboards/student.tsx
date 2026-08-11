@@ -51,6 +51,13 @@ export function StudentDashboard() {
     },
   });
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
   const name = user?.firstName || "Student";
   const exams = examsData || [];
   const submissions = submissionsData || [];
@@ -76,12 +83,20 @@ export function StudentDashboard() {
     navigate({ to: "/upload", search: { examId: exam.id } });
   };
 
-  const isLoading = isLoadingExams || isLoadingSubmissions;
+  const renderBoldFirstLetter = (str: string) => {
+    if (!str) return "";
+    return (
+      <span>
+        <span className="font-extrabold text-primary">{str.charAt(0)}</span>
+        {str.slice(1)}
+      </span>
+    );
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Hello, ${name} 👋`}
+        title={<>{getGreeting()}, {renderBoldFirstLetter(name)}</>}
         description="Stay on top of your exams, track your grades, and review feedback."
         actions={
           <Button asChild className="rounded-full bg-gradient-primary shadow-glow gap-2 cursor-pointer">
