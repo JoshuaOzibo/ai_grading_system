@@ -334,23 +334,9 @@ function CreateExam() {
                 <div className="flex gap-2">
                   <Input
                     id="topic-input"
-                    placeholder="Paste or type topics separated by commas..."
+                    placeholder="Paste or type topics (e.g., Data Structures, Sorting, Graph Theory)..."
                     value={currentTopic}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val.includes(",") || val.includes(";")) {
-                        processAndAddTopics(val);
-                      } else {
-                        setCurrentTopic(val);
-                      }
-                    }}
-                    onPaste={(e) => {
-                      const pasteText = e.clipboardData.getData("text");
-                      if (pasteText.includes(",") || pasteText.includes(";") || pasteText.includes("\n")) {
-                        e.preventDefault();
-                        processAndAddTopics(pasteText);
-                      }
-                    }}
+                    onChange={(e) => setCurrentTopic(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -370,7 +356,7 @@ function CreateExam() {
                   </Button>
                 </div>
                 <p className="text-[11px] text-muted-foreground px-1">
-                  💡 Tip: You can paste multiple topics separated by commas (e.g. <em>Arrays, Sorting, Recursion</em>).
+                  💡 Tip: Paste your questions or topics into the input field above, then click <strong>+</strong> or press <strong>Enter</strong> to arrange them into tags.
                 </p>
 
                 {/* Topics container */}
