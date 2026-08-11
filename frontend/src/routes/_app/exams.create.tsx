@@ -55,15 +55,33 @@ function CreateExam() {
     },
   });
 
-  const addTopic = () => {
-    const trimmed = currentTopic.trim();
-    if (!trimmed) return;
-    if (topics.includes(trimmed)) {
-      toast.error("Topic has already been added.");
-      return;
-    }
-    setTopics([...topics, trimmed]);
+  const processAndAddTopics = (inputStr: string) => {
+    if (!inputStr) return;
+    const rawItems = inputStr.split(/[,;\n]+/);
+    const parsedItems = rawItems
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+
+    if (parsedItems.length === 0) return;
+
+    let addedCount = 0;
+    setTopics((prev) => {
+      const updated = [...prev];
+      parsedItems.forEach((item) => {
+        if (!updated.includes(item)) {
+          updated.push(item);
+          addedCount++;
+        }
+      });
+      return updated;
+    });
+
     setCurrentTopic("");
+    if (addedCount > 0) {
+      toast.success(`Added ${addedCount} topic${addedCount > 1 ? "s" : ""}`);
+    } else {
+      toast.info("Topic(s) already in the list.");
+    }
   };
 
   const removeTopic = (indexToRemove: number) => {
@@ -75,8 +93,16 @@ function CreateExam() {
     e.stopPropagation();
 
     let finalTopics = [...topics];
-    if (currentTopic.trim() && !topics.includes(currentTopic.trim())) {
-      finalTopics.push(currentTopic.trim());
+    if (currentTopic.trim()) {
+      const pendingItems = currentTopic
+        .split(/[,;\n]+/)
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
+      pendingItems.forEach((item) => {
+        if (!finalTopics.includes(item)) {
+          finalTopics.push(item);
+        }
+      });
     }
 
     if (finalTopics.length === 0) {
@@ -308,13 +334,27 @@ function CreateExam() {
                 <div className="flex gap-2">
                   <Input
                     id="topic-input"
-                    placeholder="Type a topic and press Enter..."
+                    placeholder="Paste or type topics separated by commas..."
                     value={currentTopic}
-                    onChange={(e) => setCurrentTopic(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.includes(",") || val.includes(";")) {
+                        processAndAddTopics(val);
+                      } else {
+                        setCurrentTopic(val);
+                      }
+                    }}
+                    onPaste={(e) => {
+                      const pasteText = e.clipboardData.getData("text");
+                      if (pasteText.includes(",") || pasteText.includes(";") || pasteText.includes("\n")) {
+                        e.preventDefault();
+                        processAndAddTopics(pasteText);
+                      }
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        addTopic();
+                        processAndAddTopics(currentTopic);
                       }
                     }}
                     className="rounded-full bg-background"
@@ -324,11 +364,14 @@ function CreateExam() {
                     size="icon"
                     variant="secondary"
                     className="rounded-full shrink-0 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200"
-                    onClick={addTopic}
+                    onClick={() => processAndAddTopics(currentTopic)}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
+                <p className="text-[11px] text-muted-foreground px-1">
+                  💡 Tip: You can paste multiple topics separated by commas (e.g. <em>Arrays, Sorting, Recursion</em>).
+                </p>
 
                 {/* Topics container */}
                 {topics.length > 0 && (
