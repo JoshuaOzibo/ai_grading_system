@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import {
   Brain,
   Sparkles,
@@ -9,6 +10,8 @@ import {
   CheckCircle2,
   ArrowRight,
   GraduationCap,
+  Menu,
+  X,
 } from "lucide-react";
 import heroImg from "@/assets/hero-ai.jpg";
 
@@ -46,6 +49,18 @@ const steps = [
 ];
 
 function Landing() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.pushState(null, "", `#${id}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
@@ -57,12 +72,34 @@ function Landing() {
             </div>
             <span className="text-lg font-bold tracking-tight">GradeAI</span>
           </Link>
+
+          {/* Desktop Navigation */}
           <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
-            <a href="#features" className="hover:text-foreground">Features</a>
-            <a href="#how" className="hover:text-foreground">How it works</a>
-            <a href="#pricing" className="hover:text-foreground">For educators</a>
+            <a
+              href="#features"
+              onClick={(e) => scrollToSection(e, "features")}
+              className="transition-colors hover:text-foreground"
+            >
+              Features
+            </a>
+            <a
+              href="#how"
+              onClick={(e) => scrollToSection(e, "how")}
+              className="transition-colors hover:text-foreground"
+            >
+              How it works
+            </a>
+            <a
+              href="#pricing"
+              onClick={(e) => scrollToSection(e, "pricing")}
+              className="transition-colors hover:text-foreground"
+            >
+              For educators
+            </a>
           </nav>
-          <div className="flex items-center gap-2">
+
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
               <Link to="/login">Log in</Link>
             </Button>
@@ -70,7 +107,57 @@ function Landing() {
               <Link to="/signup">Get started</Link>
             </Button>
           </div>
+
+          {/* Mobile Actions / Toggle */}
+          <div className="flex items-center gap-2 md:hidden">
+            <Button asChild variant="ghost" size="sm" className="px-2">
+              <Link to="/login">Log in</Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-lg"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="border-b border-border/40 bg-background/95 backdrop-blur-md px-4 py-4 md:hidden animate-fade-in">
+            <nav className="flex flex-col gap-3 text-sm font-medium text-muted-foreground mb-4">
+              <a
+                href="#features"
+                onClick={(e) => scrollToSection(e, "features")}
+                className="hover:text-foreground py-1.5 transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#how"
+                onClick={(e) => scrollToSection(e, "how")}
+                className="hover:text-foreground py-1.5 transition-colors"
+              >
+                How it works
+              </a>
+              <a
+                href="#pricing"
+                onClick={(e) => scrollToSection(e, "pricing")}
+                className="hover:text-foreground py-1.5 transition-colors"
+              >
+                For educators
+              </a>
+            </nav>
+            <div className="flex flex-col gap-2 pt-3 border-t border-border/40">
+              <Button asChild size="lg" className="w-full rounded-full bg-gradient-primary shadow-glow justify-center">
+                <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Get started</Link>
+              </Button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero */}
@@ -88,13 +175,13 @@ function Landing() {
               GradeAI lets lecturers set exams, collect student submissions, and get
               AI-generated scores with detailed feedback reviewed and approved by you.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg" className="rounded-full bg-gradient-primary shadow-glow">
+            <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              <Button asChild size="lg" className="w-full sm:w-auto rounded-full bg-gradient-primary shadow-glow justify-center">
                 <Link to="/signup">
                   Get started free <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-full">
+              <Button asChild size="lg" variant="outline" className="w-full sm:w-auto rounded-full justify-center">
                 <Link to="/dashboard">See the dashboard</Link>
               </Button>
             </div>
@@ -200,7 +287,7 @@ function Landing() {
           <p className="mx-auto mt-4 max-w-lg text-primary-foreground/80">
             Join hundreds of educators saving hours every week.
           </p>
-          <Button asChild size="lg" variant="secondary" className="mt-8 rounded-full">
+          <Button asChild size="lg" variant="secondary" className="mt-8 w-full sm:w-auto rounded-full justify-center">
             <Link to="/signup">
               Get started free <ArrowRight className="h-4 w-4" />
             </Link>
