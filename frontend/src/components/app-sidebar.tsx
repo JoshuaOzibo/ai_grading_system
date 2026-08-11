@@ -86,16 +86,22 @@ const navByRole: Record<Role, { label: string; items: Item[] }[]> = {
 };
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const { role, user, logout } = useRole();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const groups = navByRole[role];
 
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="border-b">
-        <Link to="/dashboard" className="flex items-center gap-2 px-2 py-2">
+        <Link to="/dashboard" onClick={handleNavClick} className="flex items-center gap-2 px-2 py-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
             <Sparkles className="h-5 w-5 text-primary-foreground" />
           </div>
@@ -125,7 +131,7 @@ export function AppSidebar() {
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild isActive={active}>
-                        <Link to={item.url} className="flex items-center gap-3">
+                        <Link to={item.url} onClick={handleNavClick} className="flex items-center gap-3">
                           <item.icon className="h-4 w-4" />
                           {!collapsed && <span>{item.title}</span>}
                         </Link>
@@ -144,7 +150,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={path === "/notifications"}>
-                  <Link to="/notifications" className="flex items-center gap-3">
+                  <Link to="/notifications" onClick={handleNavClick} className="flex items-center gap-3">
                     <Bell className="h-4 w-4" />
                     {!collapsed && <span>Notifications</span>}
                   </Link>
@@ -152,7 +158,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={path === "/settings"}>
-                  <Link to="/settings" className="flex items-center gap-3">
+                  <Link to="/settings" onClick={handleNavClick} className="flex items-center gap-3">
                     <Settings className="h-4 w-4" />
                     {!collapsed && <span>Settings</span>}
                   </Link>
