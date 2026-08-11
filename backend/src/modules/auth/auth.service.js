@@ -1,4 +1,5 @@
 import supabase from '../../utils/supabase.js';
+import { createClient } from '@supabase/supabase-js';
 import authRepository from './auth.repository.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -54,6 +55,41 @@ class AuthService {
         authError.message.includes('ENOTFOUND')
       ) {
         localUserId = crypto.randomUUID();
+      } else if (
+        authError.message.includes('User already registered') ||
+        authError.message.includes('already exists')
+      ) {
+        // Orphan Supabase Auth user without DB profile! Clean up stale auth record using Service Role Key
+        try {
+          if (env.supabaseUrl && env.supabaseServiceKey) {
+            const supabaseAdmin = createClient(env.supabaseUrl, env.supabaseServiceKey, {
+              auth: { autoRefreshToken: false, persistSession: false },
+            });
+            const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+            const orphanUser = listData?.users?.find((u) => u.email === email);
+            if (orphanUser) {
+              await supabaseAdmin.auth.admin.deleteUser(orphanUser.id);
+              // Retry signUp once after deleting orphan record
+              const retryResult = await supabase.auth.signUp({
+                email,
+                password,
+                options: { data: { firstName, lastName, role } },
+              });
+              if (!retryResult.error && retryResult.data?.user) {
+                authData = retryResult.data;
+                authError = null;
+              } else {
+                localUserId = crypto.randomUUID();
+              }
+            } else {
+              localUserId = crypto.randomUUID();
+            }
+          } else {
+            localUserId = crypto.randomUUID();
+          }
+        } catch (cleanupErr) {
+          localUserId = crypto.randomUUID();
+        }
       } else {
         throw new Error(authError.message);
       }
