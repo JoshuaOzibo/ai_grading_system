@@ -161,7 +161,7 @@ function Results() {
         actions={
           <Button
             onClick={handleExportCSV}
-            className="rounded-full bg-gradient-primary shadow-glow gap-2 cursor-pointer"
+            className="w-full sm:w-auto rounded-full bg-gradient-primary shadow-glow gap-2 cursor-pointer"
             disabled={filteredSubmissions.length === 0}
           >
             <Download className="h-4 w-4" /> Export CSV
@@ -171,12 +171,12 @@ function Results() {
 
       {/* Selector Dropdown for Lecturers/Admins */}
       {role !== "student" && (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center bg-card p-4 rounded-xl border border-border/50">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center bg-card p-4 rounded-xl border border-border/50">
           <div className="flex items-center gap-2 text-sm font-medium">
             <BookOpen className="h-4 w-4 text-primary" />
             <span>Select Exam:</span>
           </div>
-          <div className="flex-1 max-w-md">
+          <div className="flex-1 w-full sm:max-w-md">
             {isLoadingExams ? (
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
             ) : (
@@ -212,7 +212,7 @@ function Results() {
       )}
 
       {/* Search and Filters */}
-      <div className="relative max-w-md">
+      <div className="relative w-full sm:max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder={role === "student" ? "Search exam name..." : "Search student name or ID..."}
@@ -250,102 +250,166 @@ function Results() {
           </p>
         </div>
       ) : (
-        <Card className="shadow-card bg-background border border-border/60 overflow-hidden">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground bg-muted/40">
+        <>
+          {/* Mobile Cards View (Visible on small screens) */}
+          <div className="md:hidden space-y-3">
+            {filteredSubmissions.map((r) => (
+              <Card key={r.id} className="p-4 shadow-card bg-background border border-border/60 rounded-xl space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-0.5 min-w-0 flex-1">
                     {role === "student" ? (
-                      <>
-                        <th className="px-5 py-4 font-semibold">Exam Title</th>
-                        <th className="px-5 py-4 font-semibold">Started At</th>
-                        <th className="px-5 py-4 font-semibold">Submitted At</th>
-                        <th className="px-5 py-4 font-semibold text-center">Score</th>
-                        <th className="px-5 py-4 font-semibold">Status</th>
-                      </>
+                      <p className="font-semibold text-sm text-foreground truncate">{r.exam?.title}</p>
                     ) : (
                       <>
-                        <th className="px-5 py-4 font-semibold">Student</th>
-                        <th className="px-5 py-4 font-semibold">Matric Number</th>
-                        <th className="px-5 py-4 font-semibold">Submitted At</th>
-                        <th className="px-5 py-4 font-semibold text-center">Score</th>
-                        <th className="px-5 py-4 font-semibold">Status</th>
+                        <p className="font-semibold text-sm text-foreground truncate">
+                          {r.student?.firstName} {r.student?.lastName}
+                        </p>
+                        {r.student?.matricNumber && (
+                          <p className="text-xs text-muted-foreground font-mono truncate">
+                            Matric: {r.student.matricNumber}
+                          </p>
+                        )}
                       </>
                     )}
-                    <th className="px-5 py-4 font-semibold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSubmissions.map((r) => (
-                    <tr key={r.id} className="border-b last:border-0 transition hover:bg-muted/30">
+                  </div>
+                  <Badge variant="outline" className={`capitalize rounded-full px-2.5 py-0.5 text-xs border shrink-0 ${statusColors[r.status]}`}>
+                    {r.status.toLowerCase()}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs py-2.5 border-y border-border/40 text-muted-foreground">
+                  <div>
+                    <span className="block text-[10px] uppercase font-semibold text-muted-foreground/80 tracking-wider">Submitted At</span>
+                    <span className="text-foreground">
+                      {r.submittedAt
+                        ? new Date(r.submittedAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
+                        : "N/A"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] uppercase font-semibold text-muted-foreground/80 tracking-wider">Overall Score</span>
+                    <span className="font-bold text-primary text-sm flex items-center gap-1">
+                      {r.score !== null ? (
+                        <>
+                          <Award className="h-3.5 w-3.5 text-primary" /> {r.score} pts
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground text-xs font-normal">Pending</span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full rounded-full cursor-pointer hover:bg-muted/70 text-xs"
+                  onClick={() => handleViewDetails(r.id)}
+                >
+                  View Details
+                </Button>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View (Visible on medium+ screens) */}
+          <Card className="hidden md:block shadow-card bg-background border border-border/60 overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground bg-muted/40">
                       {role === "student" ? (
                         <>
-                          <td className="px-5 py-4 font-medium">{r.exam?.title}</td>
-                          <td className="px-5 py-4 text-muted-foreground text-xs">
-                            {new Date(r.startedAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
-                          </td>
-                          <td className="px-5 py-4 text-muted-foreground text-xs">
-                            {r.submittedAt
-                              ? new Date(r.submittedAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
-                              : "N/A"}
-                          </td>
-                          <td className="px-5 py-4 font-bold text-center text-primary text-base">
-                            {r.score !== null ? (
-                              <span className="flex items-center justify-center gap-1">
-                                <Award className="h-4 w-4 text-primary" /> {r.score}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-xs font-normal">Pending</span>
-                            )}
-                          </td>
+                          <th className="px-5 py-4 font-semibold">Exam Title</th>
+                          <th className="px-5 py-4 font-semibold">Started At</th>
+                          <th className="px-5 py-4 font-semibold">Submitted At</th>
+                          <th className="px-5 py-4 font-semibold text-center">Score</th>
+                          <th className="px-5 py-4 font-semibold">Status</th>
                         </>
                       ) : (
                         <>
-                          <td className="px-5 py-4 font-medium">
-                            {r.student?.firstName} {r.student?.lastName}
-                          </td>
-                          <td className="px-5 py-4 text-muted-foreground text-xs font-mono">
-                            {r.student?.matricNumber || "N/A"}
-                          </td>
-                          <td className="px-5 py-4 text-muted-foreground text-xs">
-                            {r.submittedAt
-                              ? new Date(r.submittedAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
-                              : "N/A"}
-                          </td>
-                          <td className="px-5 py-4 font-bold text-center text-primary text-base">
-                            {r.score !== null ? (
-                              <span className="flex items-center justify-center gap-1">
-                                <Award className="h-4 w-4 text-primary" /> {r.score}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-xs font-normal">Pending</span>
-                            )}
-                          </td>
+                          <th className="px-5 py-4 font-semibold">Student</th>
+                          <th className="px-5 py-4 font-semibold">Matric Number</th>
+                          <th className="px-5 py-4 font-semibold">Submitted At</th>
+                          <th className="px-5 py-4 font-semibold text-center">Score</th>
+                          <th className="px-5 py-4 font-semibold">Status</th>
                         </>
                       )}
-                      <td className="px-5 py-4">
-                        <Badge variant="outline" className={`capitalize rounded-full px-2 py-0.5 border ${statusColors[r.status]}`}>
-                          {r.status.toLowerCase()}
-                        </Badge>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="rounded-full cursor-pointer hover:bg-muted/70"
-                          onClick={() => handleViewDetails(r.id)}
-                        >
-                          View Details
-                        </Button>
-                      </td>
+                      <th className="px-5 py-4 font-semibold text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                  </thead>
+                  <tbody>
+                    {filteredSubmissions.map((r) => (
+                      <tr key={r.id} className="border-b last:border-0 transition hover:bg-muted/30">
+                        {role === "student" ? (
+                          <>
+                            <td className="px-5 py-4 font-medium">{r.exam?.title}</td>
+                            <td className="px-5 py-4 text-muted-foreground text-xs">
+                              {new Date(r.startedAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+                            </td>
+                            <td className="px-5 py-4 text-muted-foreground text-xs">
+                              {r.submittedAt
+                                ? new Date(r.submittedAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
+                                : "N/A"}
+                            </td>
+                            <td className="px-5 py-4 font-bold text-center text-primary text-base">
+                              {r.score !== null ? (
+                                <span className="flex items-center justify-center gap-1">
+                                  <Award className="h-4 w-4 text-primary" /> {r.score}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground text-xs font-normal">Pending</span>
+                              )}
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-5 py-4 font-medium">
+                              {r.student?.firstName} {r.student?.lastName}
+                            </td>
+                            <td className="px-5 py-4 text-muted-foreground text-xs font-mono">
+                              {r.student?.matricNumber || "N/A"}
+                            </td>
+                            <td className="px-5 py-4 text-muted-foreground text-xs">
+                              {r.submittedAt
+                                ? new Date(r.submittedAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
+                                : "N/A"}
+                            </td>
+                            <td className="px-5 py-4 font-bold text-center text-primary text-base">
+                              {r.score !== null ? (
+                                <span className="flex items-center justify-center gap-1">
+                                  <Award className="h-4 w-4 text-primary" /> {r.score}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground text-xs font-normal">Pending</span>
+                              )}
+                            </td>
+                          </>
+                        )}
+                        <td className="px-5 py-4">
+                          <Badge variant="outline" className={`capitalize rounded-full px-2 py-0.5 border ${statusColors[r.status]}`}>
+                            {r.status.toLowerCase()}
+                          </Badge>
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="rounded-full cursor-pointer hover:bg-muted/70"
+                            onClick={() => handleViewDetails(r.id)}
+                          >
+                            View Details
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );

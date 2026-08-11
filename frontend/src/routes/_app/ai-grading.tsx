@@ -273,7 +273,7 @@ function AIGrading() {
 
                 {/* MCQ Options Display */}
                 {q.type === "MCQ" && q.options && (
-                  <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 text-xs">
                     {q.options.map((opt, oIdx) => {
                       const letter = String.fromCharCode(65 + oIdx);
                       const isSelected = ans.studentInput === letter;
