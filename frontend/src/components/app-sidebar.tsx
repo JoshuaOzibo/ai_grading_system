@@ -79,7 +79,6 @@ const navByRole: Record<Role, { label: string; items: Item[] }[]> = {
       items: [
         { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
         { title: "My Exams", url: "/exams", icon: GraduationCap },
-        { title: "Upload Answers", url: "/upload", icon: Upload },
         { title: "My Results", url: "/results", icon: Trophy },
       ],
     },

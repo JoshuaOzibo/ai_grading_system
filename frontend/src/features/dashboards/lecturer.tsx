@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Brain, FileText, Users, Trophy, PlusCircle, Sparkles, Download, Loader2, BookOpen, ArrowRight } from "lucide-react";
+import { Brain, FileText, Users, Trophy, PlusCircle, Sparkles, Download, Loader2, BookOpen, ArrowRight, BarChart3 } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api-client";
 import { useRole } from "@/lib/role-context";
@@ -19,6 +19,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Cell,
 } from "recharts";
 
 interface Exam {
@@ -270,57 +271,122 @@ export function LecturerDashboard() {
 
           <div className="grid gap-4 lg:grid-cols-3">
             {/* Status Chart (Left Column) */}
-            <Card className="lg:col-span-2 shadow-card bg-background border border-border/60">
-              <CardHeader>
-                <CardTitle className="text-base">Session States Distribution</CardTitle>
+            <Card className="lg:col-span-2 shadow-card bg-background border border-border/60 flex flex-col justify-between overflow-hidden">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4">
+                <div>
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    Session States Distribution
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">Real-time status breakdown for student exams</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  {chartData.map((d) => {
+                    const statusStyles: Record<string, string> = {
+                      started: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+                      submitted: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+                      graded: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+                    };
+                    return (
+                      <Badge
+                        key={d.name}
+                        variant="outline"
+                        className={`capitalize gap-1.5 px-2.5 py-1 text-xs border ${statusStyles[d.name] || "bg-muted text-muted-foreground"}`}
+                      >
+                        <span className="font-semibold">{d.name}:</span>
+                        <span className="font-extrabold">{d.submissions}</span>
+                      </Badge>
+                    );
+                  })}
+                </div>
               </CardHeader>
-              <CardContent className="h-72">
+              <CardContent className="h-72 p-4 pt-6">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={12} className="capitalize" />
-                    <YAxis stroke="var(--muted-foreground)" fontSize={12} allowDecimals={false} />
+                  <BarChart data={chartData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      stroke="var(--muted-foreground)"
+                      fontSize={12}
+                      className="capitalize"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis stroke="var(--muted-foreground)" fontSize={12} allowDecimals={false} tickLine={false} axisLine={false} />
                     <Tooltip
-                      contentStyle={{
-                        background: "var(--popover)",
-                        border: "1px solid var(--border)",
-                        borderRadius: 12,
+                      cursor={{ fill: "var(--muted)", opacity: 0.15 }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="rounded-xl border border-border/80 bg-background/95 p-3 shadow-xl backdrop-blur-md text-xs space-y-1">
+                              <p className="font-bold capitalize text-foreground">{data.name} Phase</p>
+                              <p className="text-muted-foreground">
+                                Total Submissions: <span className="font-extrabold text-primary">{data.submissions}</span>
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
                       }}
                     />
-                    <Bar dataKey="submissions" fill="var(--chart-1)" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="submissions" radius={[12, 12, 0, 0]} barSize={44}>
+                      {chartData.map((entry, index) => {
+                        const fillColors: Record<string, string> = {
+                          started: "#3b82f6",
+                          submitted: "#f59e0b",
+                          graded: "#10b981",
+                        };
+                        return <Cell key={`cell-${index}`} fill={fillColors[entry.name] || "var(--primary)"} />;
+                      })}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             {/* AI Insights Card (Right Column) */}
-            <Card className="shadow-card bg-background border border-border/60">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  AI Grading Metrics
+            <Card className="shadow-card bg-background border border-border/60 flex flex-col justify-between overflow-hidden">
+              <CardHeader className="border-b pb-4">
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                  AI Evaluation Metrics
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Evaluation progress</span>
-                    <span className="font-semibold">{completionRate}%</span>
+              <CardContent className="p-4 space-y-4 flex-1 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-xs font-semibold">
+                    <span className="text-muted-foreground">Automated Grading Rate</span>
+                    <span className="text-primary font-bold">{completionRate}%</span>
                   </div>
-                  <Progress value={completionRate} className="mt-2 h-2" />
+                  <Progress value={completionRate} className="h-2.5 rounded-full" />
                 </div>
-                <div className="rounded-xl border bg-gradient-soft p-3.5 text-xs border-primary/20 space-y-1">
-                  <p className="font-semibold text-primary">Class Average Insights</p>
-                  <p className="text-muted-foreground leading-relaxed">
-                    The average score is {averageScore} points. Submissions in status 'submitted' are currently undergoing evaluation.
+
+                <div className="rounded-2xl border bg-gradient-soft p-3.5 border-primary/20 space-y-1.5 shadow-xs">
+                  <div className="flex items-center gap-1.5">
+                    <Badge className="bg-primary/20 text-primary border-none text-[10px] uppercase tracking-wider px-2 py-0.5 font-bold">
+                      Class Performance
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed pt-1">
+                    The overall average score is <strong className="text-foreground">{averageScore} pts</strong> across graded papers.
                   </p>
                 </div>
-                <div className="rounded-xl border p-3.5 text-xs border-border/60 space-y-1">
-                  <p className="font-semibold text-foreground">Next Actions</p>
-                  <p className="text-muted-foreground leading-relaxed">
+
+                <div className="rounded-2xl border p-3.5 text-xs border-border/60 bg-muted/20 space-y-1">
+                  <p className="font-semibold text-foreground flex items-center gap-1">
+                    💡 Quick Action
+                  </p>
+                  <p className="text-muted-foreground text-[11px] leading-relaxed">
                     Review and override grade justifications directly from the student results details panels.
                   </p>
                 </div>
+
+                <Button asChild variant="outline" className="w-full rounded-full cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs gap-1.5 transition-all">
+                  <Link to="/results" search={{ examId: activeExamId }}>
+                    View Student Results Sheet <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           </div>
