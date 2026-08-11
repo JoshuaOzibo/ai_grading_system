@@ -20,6 +20,7 @@ import {
   Loader2,
   AlertCircle,
   BookOpen,
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import { api, APIError } from "@/lib/api-client";
@@ -78,6 +79,46 @@ function Questions() {
   const [aiMarkingGuide, setAiMarkingGuide] = useState("");
   const [isAiSuggesting, setIsAiSuggesting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // AI Batch Gen states
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [topics, setTopics] = useState<string[]>([]);
+  const [currentTopic, setCurrentTopic] = useState("");
+  const [aiNumQuestions, setAiNumQuestions] = useState("5");
+  const [aiQuestionType, setAiQuestionType] = useState<"MCQ" | "ESSAY">("ESSAY");
+
+  const processAndAddTopics = (inputStr: string) => {
+    if (!inputStr) return;
+    const rawItems = inputStr.split(/[,;\n]+/);
+    const parsedItems = rawItems
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+
+    if (parsedItems.length === 0) return;
+
+    let addedCount = 0;
+    setTopics((prev) => {
+      const updated = [...prev];
+      parsedItems.forEach((item) => {
+        if (!updated.includes(item)) {
+          updated.push(item);
+          addedCount++;
+        }
+      });
+      return updated;
+    });
+
+    setCurrentTopic("");
+    if (addedCount > 0) {
+      toast.success(`Added ${addedCount} topic${addedCount > 1 ? "s" : ""}`);
+    } else {
+      toast.info("Topic(s) already in the list.");
+    }
+  };
+
+  const removeTopic = (indexToRemove: number) => {
+    setTopics(topics.filter((_, index) => index !== indexToRemove));
+  };
 
   // Fetch Exams list (if no examId in search param, to let user choose)
   const { data: examsData, isLoading: isLoadingExams } = useQuery({
@@ -174,6 +215,58 @@ function Questions() {
       toast.error(err.message || "Failed to delete question");
     },
   });
+
+  const aiBatchGenerateMutation = useMutation({
+    mutationFn: async (vars: { topic: string; numQuestions: number; questionType: string }) => {
+      const res = await api.post<{ data: Question[] }>(`/exams/${selectedExamId}/generate-questions`, vars);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["questions", selectedExamId] });
+      setAiDialogOpen(false);
+      setTopics([]);
+      setCurrentTopic("");
+      toast.success("AI generated and added questions to exam successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to generate questions using AI");
+    },
+  });
+
+  const handleAiGenerateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    let finalTopics = [...topics];
+    if (currentTopic.trim()) {
+      const pendingItems = currentTopic
+        .split(/[,;\n]+/)
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
+      pendingItems.forEach((item) => {
+        if (!finalTopics.includes(item)) {
+          finalTopics.push(item);
+        }
+      });
+    }
+
+    if (finalTopics.length === 0) {
+      toast.error("Please add at least one topic or syllabus point.");
+      return;
+    }
+
+    const count = parseInt(aiNumQuestions, 10);
+    if (isNaN(count) || count < 1) {
+      toast.error("Please enter a valid number of questions (at least 1).");
+      return;
+    }
+
+    aiBatchGenerateMutation.mutate({
+      topic: finalTopics.join(", "),
+      numQuestions: count,
+      questionType: aiQuestionType,
+    });
+  };
 
   const resetForm = () => {
     setEditingQuestion(null);
@@ -279,13 +372,23 @@ function Questions() {
         description="Configure exam questions, specify correct answers, and generate AI grading guidelines."
         actions={
           selectedExamId && activeExam?.status === "DRAFT" ? (
-            <Button
-              className="rounded-full bg-gradient-primary shadow-glow gap-2 cursor-pointer"
-              onClick={handleOpenCreateDialog}
-              disabled={isMutating}
-            >
-              <Plus className="h-4 w-4" /> Add Question
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                className="rounded-full gap-2 cursor-pointer border-primary/40 hover:bg-primary/10 text-primary font-medium"
+                onClick={() => setAiDialogOpen(true)}
+                disabled={isMutating || aiBatchGenerateMutation.isPending}
+              >
+                <Sparkles className="h-4 w-4 text-primary" /> Generate with AI
+              </Button>
+              <Button
+                className="rounded-full bg-gradient-primary shadow-glow gap-2 cursor-pointer"
+                onClick={handleOpenCreateDialog}
+                disabled={isMutating || aiBatchGenerateMutation.isPending}
+              >
+                <Plus className="h-4 w-4" /> Add Question
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -661,6 +764,156 @@ function Questions() {
               >
                 {isMutating && <Loader2 className="h-4 w-4 animate-spin" />}
                 {editingQuestion ? "Save Changes" : "Create Question"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Batch Questions Generator Dialog */}
+      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-background border border-border">
+          <form onSubmit={handleAiGenerateSubmit}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                AI Question Generator
+              </DialogTitle>
+              <DialogDescription>
+                Specify topics and desired question count to instantly generate AI questions for this exam.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-3">
+                <Label htmlFor="q-topic-input">Topics / Syllabus Points</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="q-topic-input"
+                    placeholder="Paste or type topics (e.g., Database Normalization, SQL Joins)..."
+                    value={currentTopic}
+                    onChange={(e) => setCurrentTopic(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        processAndAddTopics(currentTopic);
+                      }
+                    }}
+                    className="rounded-full bg-background"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    className="rounded-full shrink-0 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+                    onClick={() => processAndAddTopics(currentTopic)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground px-1">
+                  💡 Tip: Paste topics or paste questions into the input field above, then click <strong>+</strong> or press <strong>Enter</strong> to arrange into tags.
+                </p>
+
+                {/* Topics container */}
+                {topics.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-muted/40 border border-border/50 max-h-32 overflow-y-auto">
+                    {topics.map((t, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-background text-foreground rounded-full border border-border/80 shadow-sm hover:shadow-md transition-all duration-200"
+                      >
+                        <span>{t}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeTopic(idx)}
+                          className="text-muted-foreground hover:text-destructive transition-colors rounded-full p-0.5 hover:bg-muted cursor-pointer"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="aiNumQuestions">Number of Questions</Label>
+                  <Input
+                    id="aiNumQuestions"
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={aiNumQuestions}
+                    onChange={(e) => setAiNumQuestions(e.target.value)}
+                    placeholder="Enter count (e.g. 5)"
+                    className="rounded-full bg-background font-medium"
+                  />
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {["3", "5", "10", "15", "20"].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setAiNumQuestions(preset)}
+                        className={`text-[11px] px-2.5 py-0.5 rounded-full border transition-all cursor-pointer font-medium ${
+                          aiNumQuestions === preset
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border/60"
+                        }`}
+                      >
+                        {preset} Qs
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="aiQuestionType">Question Type</Label>
+                  <Select
+                    value={aiQuestionType}
+                    onValueChange={(val) => setAiQuestionType(val as "MCQ" | "ESSAY")}
+                  >
+                    <SelectTrigger id="aiQuestionType" className="rounded-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MCQ">Multiple Choice (MCQ)</SelectItem>
+                      <SelectItem value="ESSAY">Essay / Theory</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground pt-1">
+                    {aiQuestionType === "MCQ"
+                      ? "Strictly 4-choice objective questions with correct keys."
+                      : "Strictly open-ended theory questions with marking guides."}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full cursor-pointer"
+                onClick={() => setAiDialogOpen(false)}
+                disabled={aiBatchGenerateMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="rounded-full bg-gradient-primary cursor-pointer gap-2"
+                disabled={aiBatchGenerateMutation.isPending}
+              >
+                {aiBatchGenerateMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Generate Questions
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </form>

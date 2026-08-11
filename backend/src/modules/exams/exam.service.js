@@ -165,6 +165,40 @@ class ExamService {
     console.log(`[AI Exam Generation] Complete. Successfully built Exam ID: ${exam.id}`);
     return exam;
   }
+
+  async generateQuestionsForExamWithAI(lecturerId, examId, { topic, numQuestions, questionType }) {
+    const exam = await examRepository.findById(examId);
+    if (!exam) throw new Error('Exam not found');
+    if (exam.lecturerId !== lecturerId) throw new Error('Access denied. You are not the creator of this exam.');
+
+    const count = parseInt(numQuestions, 10) || 5;
+    const type = questionType === 'MCQ' ? 'MCQ' : 'ESSAY';
+
+    const generatedData = await generateExamQuestions(topic || exam.title, count, type);
+
+    const { default: prisma } = await import('../../utils/prisma.js');
+    const createdQuestions = [];
+
+    if (generatedData.questions && generatedData.questions.length > 0) {
+      for (const q of generatedData.questions) {
+        const createdQ = await prisma.question.create({
+          data: {
+            examId: exam.id,
+            type: type,
+            text: q.text,
+            points: parseInt(q.points, 10) || (type === 'MCQ' ? 2 : 5),
+            options: type === 'MCQ' ? (q.options || []) : [],
+            correctOption: type === 'MCQ' ? (q.correctOption || 'A') : null,
+            expectedAnswer: type === 'ESSAY' ? (q.expectedAnswer || '') : null,
+            aiMarkingGuide: type === 'ESSAY' ? (q.aiMarkingGuide || '') : null,
+          },
+        });
+        createdQuestions.push(createdQ);
+      }
+    }
+
+    return createdQuestions;
+  }
 }
 
 export default new ExamService();

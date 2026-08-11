@@ -21,6 +21,9 @@ router.post('/', verifyToken, restrictTo(ROLES.LECTURER), examController.createE
 // Update a draft exam details (Lecturers only)
 router.put('/:id', verifyToken, restrictTo(ROLES.LECTURER), examController.updateExam);
 
+// Generate AI questions for an existing exam (Lecturers only)
+router.post('/:id/generate-questions', verifyToken, restrictTo(ROLES.LECTURER), examController.generateQuestionsForExamWithAI);
+
 // Publish a draft exam (Lecturers only)
 router.patch('/:id/publish', verifyToken, restrictTo(ROLES.LECTURER), examController.publishExam);
 

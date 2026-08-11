@@ -113,6 +113,22 @@ class ExamController {
       });
     }
   }
+
+  async generateQuestionsForExamWithAI(req, res) {
+    try {
+      const questions = await examService.generateQuestionsForExamWithAI(req.user.id, req.params.id, req.body);
+      return sendSuccess(res, {
+        statusCode: HTTP_STATUS.CREATED,
+        message: 'Questions generated successfully with AI',
+        data: questions,
+      });
+    } catch (error) {
+      return sendError(res, {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: error.message,
+      });
+    }
+  }
 }
 
 export default new ExamController();
