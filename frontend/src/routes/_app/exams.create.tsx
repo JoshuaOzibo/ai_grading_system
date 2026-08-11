@@ -110,9 +110,15 @@ function CreateExam() {
       return;
     }
 
+    const count = parseInt(aiNumQuestions, 10);
+    if (isNaN(count) || count < 1) {
+      toast.error("Please enter a valid number of questions (at least 1).");
+      return;
+    }
+
     aiGenerateMutation.mutate({
       topic: finalTopics.join(", "),
-      numQuestions: parseInt(aiNumQuestions, 10),
+      numQuestions: count,
       questionType: aiQuestionType,
     });
   };
@@ -383,16 +389,32 @@ function CreateExam() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="aiNumQuestions">Number of Questions</Label>
-                  <Select value={aiNumQuestions} onValueChange={setAiNumQuestions}>
-                    <SelectTrigger id="aiNumQuestions" className="rounded-full">
-                      <SelectValue placeholder="Select count" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3">3 Questions</SelectItem>
-                      <SelectItem value="5">5 Questions</SelectItem>
-                      <SelectItem value="10">10 Questions</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="aiNumQuestions"
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={aiNumQuestions}
+                    onChange={(e) => setAiNumQuestions(e.target.value)}
+                    placeholder="Enter count (e.g. 5)"
+                    className="rounded-full bg-background font-medium"
+                  />
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {["3", "5", "10", "15", "20"].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setAiNumQuestions(preset)}
+                        className={`text-[11px] px-2.5 py-0.5 rounded-full border transition-all cursor-pointer font-medium ${
+                          aiNumQuestions === preset
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border/60"
+                        }`}
+                      >
+                        {preset} Qs
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="aiQuestionType">Question Type</Label>
@@ -408,6 +430,11 @@ function CreateExam() {
                       <SelectItem value="ESSAY">Essay / Theory</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-[11px] text-muted-foreground pt-1">
+                    {aiQuestionType === "MCQ"
+                      ? "Strictly 4-choice objective questions with correct keys."
+                      : "Strictly open-ended theory questions with marking guides."}
+                  </p>
                 </div>
               </div>
             </div>

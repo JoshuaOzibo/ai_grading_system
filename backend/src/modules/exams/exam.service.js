@@ -147,13 +147,13 @@ class ExamService {
         const createdQ = await prisma.question.create({
           data: {
             examId: exam.id,
-            type: q.type === 'MCQ' ? 'MCQ' : 'ESSAY',
+            type: type,
             text: q.text,
-            points: parseInt(q.points, 10) || 5,
-            options: q.options || [],
-            correctOption: q.correctOption || null,
-            expectedAnswer: q.expectedAnswer || null,
-            aiMarkingGuide: q.aiMarkingGuide || null,
+            points: parseInt(q.points, 10) || (type === 'MCQ' ? 2 : 5),
+            options: type === 'MCQ' ? (q.options || []) : [],
+            correctOption: type === 'MCQ' ? (q.correctOption || 'A') : null,
+            expectedAnswer: type === 'ESSAY' ? (q.expectedAnswer || '') : null,
+            aiMarkingGuide: type === 'ESSAY' ? (q.aiMarkingGuide || '') : null,
           }
         });
         console.log(`   -> Saved Question ${index + 1}: "${q.text.substring(0, 50)}..." [ID: ${createdQ.id}]`);

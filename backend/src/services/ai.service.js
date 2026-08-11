@@ -125,12 +125,13 @@ Respond strictly with a JSON object in this format (no other text, no markdown f
  */
 export const generateExamQuestions = async (topic, numQuestions, questionType) => {
   const apiKey = env.deepseekApiKey;
+  const targetType = questionType === 'MCQ' ? 'MCQ' : 'ESSAY';
 
   if (!apiKey || apiKey === 'your_deepseek_api_key_here') {
     console.warn('DeepSeek API key is not set. Returning mock generated exam.');
     const questions = [];
     for (let i = 1; i <= numQuestions; i++) {
-      if (questionType === 'MCQ') {
+      if (targetType === 'MCQ') {
         questions.push({
           type: 'MCQ',
           text: `Mock MCQ Question ${i} on ${topic}: Which of the following is correct?`,
@@ -160,33 +161,99 @@ export const generateExamQuestions = async (topic, numQuestions, questionType) =
   }
 
   try {
-    const prompt = `Create an academic exam on the topic "${topic}" containing ${numQuestions} questions of type "${questionType}" (MCQ or ESSAY).
+    const typeInstruction = targetType === 'MCQ'
+      ? `CRITICAL STRICT REQUIREMENT: EVERY SINGLE QUESTION MUST BE A MULTIPLE CHOICE QUESTION (MCQ).
+- 'type' MUST be strictly "MCQ".
+- 'options' MUST be an array of EXACTLY 4 choices (strings).
+- 'correctOption' MUST be one of "A", "B", "C", or "D".
+- 'expectedAnswer' and 'aiMarkingGuide' MUST be null.
+DO NOT generate any essay, open-ended, or written-explanation questions.`
+      : `CRITICAL STRICT REQUIREMENT: EVERY SINGLE QUESTION MUST BE AN ESSAY / THEORY WRITTEN QUESTION.
+- 'type' MUST be strictly "ESSAY".
+- 'options' MUST be an empty array [].
+- 'correctOption' MUST be null.
+- 'expectedAnswer' MUST contain a comprehensive model/ideal answer.
+- 'aiMarkingGuide' MUST contain grading criteria/rubric.
+DO NOT generate any multiple-choice options, ABCD choices, or objective options.`;
+
+    const prompt = `Create an academic exam on the topic "${topic}" containing EXACTLY ${numQuestions} questions.
+
+${typeInstruction}
+
 Provide:
 1. A concise, professional Exam Title.
 2. A brief Exam Description/instructions.
-3. A list of questions.
-- If type is MCQ: questions must have "type" ("MCQ"), "text", "points" (integer, e.g. 2), "options" (array of exactly 4 choices), "correctOption" (must be "A", "B", "C", or "D"), and null "expectedAnswer" and "aiMarkingGuide".
-- If type is ESSAY: questions must have "type" ("ESSAY"), "text", "points" (integer, e.g. 5), empty "options" array, null "correctOption", and complete "expectedAnswer" and "aiMarkingGuide".
+3. A list of ${numQuestions} questions formatted strictly according to the rules above.
 
 Respond strictly with a JSON object in this format (no other text, no markdown formatting wrappers like \`\`\`json):
 {
   "title": "Exam Title",
   "description": "Exam Description/Instructions",
   "questions": [
-    {
+    ${targetType === 'MCQ' ? `{
       "type": "MCQ",
-      "text": "Question text?",
+      "text": "Which concept correctly describes...?",
       "points": 2,
-      "options": ["Choice A", "Choice B", "Choice C", "Choice D"],
-      "correctOption": "B",
+      "options": ["Choice A text", "Choice B text", "Choice C text", "Choice D text"],
+      "correctOption": "A",
       "expectedAnswer": null,
       "aiMarkingGuide": null
-    }
+    }` : `{
+      "type": "ESSAY",
+      "text": "Discuss the primary mechanisms of...",
+      "points": 5,
+      "options": [],
+      "correctOption": null,
+      "expectedAnswer": "Model ideal answer text...",
+      "aiMarkingGuide": "Criteria and breakdown..."
+    }`}
   ]
 }`;
 
     const textResponse = await callAI(prompt);
-    return JSON.parse(textResponse.trim());
+    const parsed = JSON.parse(textResponse.trim());
+
+    // Normalize and strictly enforce question types
+    if (parsed && Array.isArray(parsed.questions)) {
+      parsed.questions = parsed.questions.map((q, idx) => {
+        if (targetType === 'MCQ') {
+          let opts = Array.isArray(q.options) && q.options.length >= 4 ? q.options.slice(0, 4) : [];
+          if (opts.length < 4) {
+            opts = [
+              opts[0] || 'Option A',
+              opts[1] || 'Option B',
+              opts[2] || 'Option C',
+              opts[3] || 'Option D',
+            ];
+          }
+          let correct = typeof q.correctOption === 'string' ? q.correctOption.toUpperCase() : 'A';
+          if (!['A', 'B', 'C', 'D'].includes(correct)) {
+            correct = 'A';
+          }
+          return {
+            type: 'MCQ',
+            text: q.text || `Question ${idx + 1}`,
+            points: parseInt(q.points, 10) || 2,
+            options: opts,
+            correctOption: correct,
+            expectedAnswer: null,
+            aiMarkingGuide: null,
+          };
+        } else {
+          return {
+            type: 'ESSAY',
+            text: q.text || `Question ${idx + 1}`,
+            points: parseInt(q.points, 10) || 5,
+            options: [],
+            correctOption: null,
+            expectedAnswer: q.expectedAnswer || 'Model answer to be defined by lecturer.',
+            aiMarkingGuide: q.aiMarkingGuide || 'Grading criteria based on conceptual accuracy and depth.',
+          };
+        }
+      });
+    }
+
+    return parsed;
   } catch (error) {
     console.error('Error generating exam questions:', error);
     throw new Error(`Failed to generate exam with AI: ${error.message}`);
