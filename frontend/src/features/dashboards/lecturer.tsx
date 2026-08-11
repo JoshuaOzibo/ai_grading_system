@@ -151,7 +151,7 @@ export function LecturerDashboard() {
     if (!str) return "";
     return (
       <span>
-        <span className="font-extrabold text-primary">{str.charAt(0)}</span>
+        <span className="font-bold">{str.charAt(0).toUpperCase()}</span>
         {str.slice(1)}
       </span>
     );
